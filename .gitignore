@@ -1,0 +1,24 @@
+# Git worktrees (temporary working directories)
+.worktrees/
+
+# Local Claude Code settings (machine-specific, may contain personal preferences)
+.claude/settings.local.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

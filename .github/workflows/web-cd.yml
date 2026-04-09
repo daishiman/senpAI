@@ -1,0 +1,163 @@
+name: Web CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/shared/**"
+      - ".github/workflows/web-cd.yml"
+  workflow_dispatch:
+
+# 最小権限の原則
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: web-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # apps/web ディレクトリの存在をチェック
+  check:
+    name: Check Web App Exists
+    runs-on: ubuntu-latest
+    outputs:
+      web_exists: ${{ steps.check_dir.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if apps/web exists
+        id: check_dir
+        run: |
+          if [ -d "apps/web" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ apps/web ディレクトリが存在します"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ apps/web ディレクトリが存在しません。ワークフローをスキップします。"
+          fi
+
+  ci:
+    name: Validate Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: check
+    if: needs.check.outputs.web_exists == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @repo/shared build
+
+      - name: Build web app
+        run: pnpm --filter @repo/web build
+
+      - name: Type check
+        run: pnpm --filter @repo/web typecheck
+
+      - name: Lint
+        run: pnpm --filter @repo/web lint
+
+  deploy:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [check, ci]
+    if: false # Railway 運用停止中のため deploy を無効化
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "🚀 Deploying web app to Railway..."
+          set +e
+          DEPLOY_OUTPUT="$(railway up --service web --detach 2>&1)"
+          DEPLOY_EXIT_CODE=$?
+          set -e
+
+          echo "$DEPLOY_OUTPUT"
+
+          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            if echo "$DEPLOY_OUTPUT" | grep -qi "Usage limit exceeded"; then
+              echo "::error title=Railway usage limit exceeded::Railway の Hard limit を超過しています。Railway Dashboard > Usage で Hard limit を引き上げるか解除してください。"
+            fi
+            exit $DEPLOY_EXIT_CODE
+          fi
+
+          echo "✅ Deployment triggered successfully"
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
+        id: healthcheck
+        env:
+          WEB_DOMAIN: ${{ secrets.RAILWAY_WEB_DOMAIN }}
+        run: |
+          if [ -z "$WEB_DOMAIN" ]; then
+            echo "⚠️  RAILWAY_WEB_DOMAIN が設定されていません。ヘルスチェックをスキップします。"
+            exit 0
+          fi
+
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "ヘルスチェック試行 $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+
+            if curl -f -s "https://${WEB_DOMAIN}" > /dev/null; then
+              echo "✅ デプロイ成功！"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 10
+          done
+
+          echo "❌ ヘルスチェック失敗"
+          exit 1
+
+      - name: Notify Success
+        if: success()
+        uses: ./.github/actions/discord-notify
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: success
+          service: web
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Failure
+        if: failure()
+        uses: ./.github/actions/discord-notify
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: failure
+          service: web
+          error_message: "Deployment or health check failed"
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
