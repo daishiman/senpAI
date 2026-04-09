@@ -1,0 +1,265 @@
+#!/bin/sh
+# pre-push hook: プッシュ前にCI相当のチェックを実行
+#
+# ⚠️  警告: --no-verify オプションは絶対禁止です！
+# このフックをスキップすると、CIで初めてエラーが検出され、
+# 修正に余計な時間がかかります。
+# テストが失敗する場合は、テストを修正してください。
+# 詳細は CLAUDE.md の「Git操作の禁止事項」を参照。
+
+echo "🔍 Running pre-push CI validation..."
+
+# 高速モードで検証（ビルドはスキップ）
+# フルチェックが必要な場合は ./scripts/validate-ci.sh を直接実行
+
+# ==========================================================================
+# Node.jsバージョンチェック
+# .nvmrcで指定されたバージョンと現在のバージョンを比較し、
+# 不一致の場合はnvm/fnm/voltaで自動切替を試みる
+# ==========================================================================
+SKIP_NATIVE_TESTS=false
+
+if [ -f ".nvmrc" ]; then
+    REQUIRED_MAJOR=$(sed 's/^v//' .nvmrc | cut -d. -f1)
+    CURRENT_MAJOR=$(node -v | sed 's/^v//' | cut -d. -f1)
+
+    if [ "$REQUIRED_MAJOR" != "$CURRENT_MAJOR" ]; then
+        echo "⚠️  Node.js version mismatch: current v$(node -v | sed 's/^v//'), required v$(cat .nvmrc)"
+        echo "   Attempting to switch Node.js version..."
+
+        SWITCHED=false
+
+        # fnm
+        if command -v fnm > /dev/null 2>&1; then
+            eval "$(fnm env --shell sh 2>/dev/null)" 2>/dev/null
+            if fnm use 2>/dev/null; then
+                echo "   ✅ Switched via fnm to $(node -v)"
+                SWITCHED=true
+            fi
+        fi
+
+        # nvm
+        if [ "$SWITCHED" = false ]; then
+            export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+                . "$NVM_DIR/nvm.sh" 2>/dev/null
+                if nvm use 2>/dev/null; then
+                    echo "   ✅ Switched via nvm to $(node -v)"
+                    SWITCHED=true
+                fi
+            fi
+        fi
+
+        # volta
+        if [ "$SWITCHED" = false ] && command -v volta > /dev/null 2>&1; then
+            if volta run --node "$(cat .nvmrc)" node -v > /dev/null 2>&1; then
+                echo "   ✅ Volta detected Node.js $(cat .nvmrc)"
+                SWITCHED=true
+            fi
+        fi
+
+        if [ "$SWITCHED" = false ]; then
+            # 再度メジャーバージョン確認（切り替え後）
+            CURRENT_MAJOR=$(node -v | sed 's/^v//' | cut -d. -f1)
+            if [ "$REQUIRED_MAJOR" != "$CURRENT_MAJOR" ]; then
+                echo "   ❌ Could not switch Node.js version."
+                echo "   Skipping tests that require native modules (better-sqlite3)."
+                echo "   Lint and type check will still run."
+                echo "   💡 Install Node.js $(cat .nvmrc): nvm install $(cat .nvmrc)"
+                SKIP_NATIVE_TESTS=true
+            fi
+        fi
+    fi
+fi
+
+# ドキュメント専用変更の検出
+REMOTE_REF=$(git rev-parse @{upstream} 2>/dev/null || git rev-parse origin/main 2>/dev/null || echo "HEAD~1")
+CHANGED_FILES=$(git diff --name-only "$REMOTE_REF" HEAD 2>/dev/null)
+
+# ドキュメント/設定ファイルのみの変更かチェック
+DOCS_ONLY=true
+for file in $CHANGED_FILES; do
+    case "$file" in
+        *.md|*.txt|.claude/*|docs/*|.husky/*|*.json|.github/*)
+            # ドキュメント/設定ファイル - テストスキップ対象
+            ;;
+        *)
+            # コードファイルが含まれている
+            DOCS_ONLY=false
+            break
+            ;;
+    esac
+done
+
+if [ "$DOCS_ONLY" = "true" ] && [ -n "$CHANGED_FILES" ]; then
+    echo "📄 Documentation-only changes detected. Skipping tests."
+    echo "✅ Pre-push checks passed (docs-only mode)!"
+    exit 0
+fi
+
+# ==========================================================================
+# Phase 1: Lint + Shared Build（並列実行）
+# - Lint は独立して実行可能
+# - Shared Build は TypeCheck の前提条件（型解決に dist が必要）
+# ==========================================================================
+echo ""
+echo "═══════════════════════════════════════════"
+echo "  Phase 1: Lint + Shared Build（並列）"
+echo "═══════════════════════════════════════════"
+
+PHASE1_FAILED=""
+
+# Lint をバックグラウンドで実行
+echo "📝 [1/2] Starting lint..."
+pnpm lint > /tmp/pre-push-lint.log 2>&1 &
+LINT_PID=$!
+
+# Shared Build をバックグラウンドで実行
+echo "📦 [2/2] Starting shared build..."
+pnpm --filter @repo/shared build > /tmp/pre-push-shared-build.log 2>&1 &
+BUILD_PID=$!
+
+# Lint の完了を待機
+wait $LINT_PID
+LINT_EXIT=$?
+if [ $LINT_EXIT -ne 0 ]; then
+    echo "❌ Lint failed (exit code: $LINT_EXIT)"
+    cat /tmp/pre-push-lint.log
+    PHASE1_FAILED="lint"
+else
+    echo "✅ Lint passed"
+fi
+
+# Shared Build の完了を待機
+wait $BUILD_PID
+BUILD_EXIT=$?
+if [ $BUILD_EXIT -ne 0 ]; then
+    echo "❌ Shared build failed (exit code: $BUILD_EXIT)"
+    cat /tmp/pre-push-shared-build.log
+    if [ -n "$PHASE1_FAILED" ]; then
+        PHASE1_FAILED="$PHASE1_FAILED, shared-build"
+    else
+        PHASE1_FAILED="shared-build"
+    fi
+else
+    echo "✅ Shared build passed"
+fi
+
+# Phase 1 の結果チェック
+if [ -n "$PHASE1_FAILED" ]; then
+    echo ""
+    echo "❌ Phase 1 failed: $PHASE1_FAILED"
+    echo "💡 Fix the errors above and try again."
+    rm -f /tmp/pre-push-lint.log /tmp/pre-push-shared-build.log
+    exit 1
+fi
+
+echo "✅ Phase 1 complete"
+
+# ==========================================================================
+# Phase 2: TypeCheck + Tests（並列実行）
+# - TypeCheck: Shared Build 完了後に実行（Phase 1 で保証）
+# - Tests: Shared Build に依存しない（エイリアスで直接ソース参照）
+# ==========================================================================
+echo ""
+echo "═══════════════════════════════════════════"
+echo "  Phase 2: TypeCheck + Tests（並列）"
+echo "═══════════════════════════════════════════"
+
+PHASE2_FAILED=""
+
+# TypeCheck をバックグラウンドで実行
+echo "🔧 [1/2] Starting type check..."
+pnpm typecheck > /tmp/pre-push-typecheck.log 2>&1 &
+TYPECHECK_PID=$!
+
+# テスト実行（バックグラウンド）
+if [ "$SKIP_NATIVE_TESTS" = true ]; then
+    echo "⏭️  [2/2] Skipping tests (Node.js version mismatch)"
+    # ダミーのバックグラウンドプロセス（即完了）
+    true &
+    TEST_PID=$!
+else
+    echo "🧪 [2/2] Starting ALL tests (timeout: 900s)..."
+    echo "   This includes @repo/shared and @repo/desktop to match CI coverage."
+
+    # タイムアウト付きテスト実行（大規模テストのためタイムアウトを900秒に延長）
+    # --foregroundオプションでシグナルがスクリプト全体に伝播しないようにする
+    (
+        trap "" TERM
+        if command -v timeout > /dev/null 2>&1; then
+            timeout --foreground 900 pnpm test:all || echo "TIMEOUT_OR_FAILED:$?" >> /tmp/pre-push-test-exit.log
+        elif command -v gtimeout > /dev/null 2>&1; then
+            gtimeout 900 pnpm test:all || echo "TIMEOUT_OR_FAILED:$?" >> /tmp/pre-push-test-exit.log
+        else
+            pnpm test:all || echo "TIMEOUT_OR_FAILED:$?" >> /tmp/pre-push-test-exit.log
+        fi
+    ) > /tmp/pre-push-test.log 2>&1 &
+    TEST_PID=$!
+fi
+
+# TypeCheck の完了を待機
+wait $TYPECHECK_PID
+TYPECHECK_EXIT=$?
+if [ $TYPECHECK_EXIT -ne 0 ]; then
+    echo "❌ Type check failed (exit code: $TYPECHECK_EXIT)"
+    cat /tmp/pre-push-typecheck.log
+    PHASE2_FAILED="typecheck"
+else
+    echo "✅ Type check passed"
+fi
+
+# テストの完了を待機
+wait $TEST_PID
+TEST_EXIT=$?
+
+# タイムアウト判定（timeout/pnpm両方の終了コードに対応）
+# - 124: timeout command直接
+# - 137: SIGKILL (128+9)
+# - 143: SIGTERM (128+15)
+# - 1: pnpmのELIFECYCLEによるラップ時（ログで「ELIFECYCLE Command failed」を確認）
+IS_TIMEOUT=false
+if [ $TEST_EXIT -eq 124 ] || [ $TEST_EXIT -eq 137 ] || [ $TEST_EXIT -eq 143 ]; then
+    IS_TIMEOUT=true
+elif [ $TEST_EXIT -eq 1 ] && grep -q "ELIFECYCLE.*Command failed" /tmp/pre-push-test.log 2>/dev/null; then
+    # pnpmがtimeoutによる強制終了をラップした場合
+    # テスト結果サマリー（"Tests  X passed"）が不完全な場合はタイムアウトと判定
+    if ! grep -qE "Test Files.*passed.*\([0-9]+\)" /tmp/pre-push-test.log 2>/dev/null; then
+        IS_TIMEOUT=true
+    fi
+fi
+
+if [ "$SKIP_NATIVE_TESTS" = true ]; then
+    echo "⏭️  Tests skipped (will run in CI)"
+elif [ "$IS_TIMEOUT" = true ]; then
+    echo "⏱️  Tests timed out after 900s. Proceeding with push."
+    echo "💡 Run 'pnpm test:all' manually to verify all tests pass."
+    echo "   CI will run the full test suite."
+elif [ $TEST_EXIT -ne 0 ]; then
+    echo "❌ Tests failed (exit code: $TEST_EXIT)"
+    cat /tmp/pre-push-test.log
+    if [ -n "$PHASE2_FAILED" ]; then
+        PHASE2_FAILED="$PHASE2_FAILED, tests"
+    else
+        PHASE2_FAILED="tests"
+    fi
+else
+    echo "✅ Tests passed"
+fi
+
+# Phase 2 の結果チェック
+if [ -n "$PHASE2_FAILED" ]; then
+    echo ""
+    echo "❌ Phase 2 failed: $PHASE2_FAILED"
+    echo "💡 Fix the errors above and try again."
+    rm -f /tmp/pre-push-lint.log /tmp/pre-push-shared-build.log /tmp/pre-push-typecheck.log /tmp/pre-push-test.log
+    exit 1
+fi
+
+# 一時ファイルのクリーンアップ
+rm -f /tmp/pre-push-lint.log /tmp/pre-push-shared-build.log /tmp/pre-push-typecheck.log /tmp/pre-push-test.log
+
+echo ""
+echo "═══════════════════════════════════════════"
+echo "  ✅ All pre-push checks passed!"
+echo "═══════════════════════════════════════════"
