@@ -19,26 +19,27 @@
 | 原則               | 説明                                         | 具体例                                     |
 | ------------------ | -------------------------------------------- | ------------------------------------------ |
 | 学習コストの最小化 | 広く使われ、ドキュメントが充実した技術を優先 | React, Next.js, TypeScript等の主流技術     |
-| 無料枠の最大活用   | 無料tier内で運用可能なサービスを選定         | Vercel, Turso, Railway等                   |
+| 無料枠の最大活用   | 無料tier内で運用可能なサービスを選定         | Cloudflare, Turso等                        |
 | 型安全性の徹底     | コンパイル時・実行時の両方で型を検証         | TypeScript strict mode + Zodによる実行時検証 |
 
 ### アーキテクチャ概要
 
 **モノレポ構成（pnpm）**
 
-| レイヤー     | パス           | 説明                           |
-| ------------ | -------------- | ------------------------------ |
-| apps         | apps/web/      | Next.js 15 (App Router)        |
-| apps         | apps/desktop/  | Electron + Next.js（将来対応） |
-| packages     | packages/shared/ | 共通ロジック、型定義、ユーティリティ |
+| レイヤー | パス | 説明 |
+| -------- | ---- | ---- |
+| apps | apps/web/ | Next.js 15 (App Router) → Cloudflare Pages |
+| packages | packages/shared/ | 共通ロジック、型定義、ユーティリティ |
 
 **外部サービス**
 
-| サービス    | 説明                               | 料金                  |
-| ----------- | ---------------------------------- | --------------------- |
-| Turso       | 分散SQLite                         | 無料: 9GB, 500Mリクエスト |
-| Railway     | ホスティング                       | 従量課金              |
-| AI Provider | OpenAI / Anthropic / Google / xAI  | プロバイダ依存        |
+| サービス | 説明 | 料金 |
+| -------- | ---- | ---- |
+| Cloudflare Pages | フロントエンドホスティング | 無料: 無制限リクエスト |
+| Cloudflare Workers | API バックエンド | 無料: 100,000 リクエスト/日 |
+| Cloudflare D1 | SQLite データベース | 無料: 5GB |
+| Turso | 分散 SQLite（補完） | 無料: 9GB, 500M リクエスト |
+| AI Provider | OpenAI / Anthropic / Google / xAI | プロバイダ依存 |
 
 ---
 

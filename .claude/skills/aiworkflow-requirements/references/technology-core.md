@@ -1,4 +1,4 @@
-# コア技術スタック（Next.js, TypeScript, Electron）
+# コア技術スタック（Next.js, TypeScript, Cloudflare）
 
 > 本ドキュメントは統合システム設計仕様書の一部です。
 > 管理: .claude/skills/aiworkflow-requirements/
@@ -21,7 +21,7 @@
 | 原則               | 説明                                                   |
 | ------------------ | ------------------------------------------------------ |
 | 学習コストの最小化 | 広く使われ、ドキュメントが充実した技術を優先           |
-| 無料枠の最大活用   | Vercel、Turso、Railway等の無料tier内で運用可能         |
+| 無料枠の最大活用   | Cloudflare、Turso等の無料tier内で運用可能              |
 | 型安全性の徹底     | TypeScript strict modeとZodによる実行時検証を組み合わせる |
 
 ### アーキテクチャ概要
@@ -30,10 +30,9 @@
 
 **アプリケーション層（apps/）**
 
-| ディレクトリ   | 技術                     | 説明               |
-| -------------- | ------------------------ | ------------------ |
-| apps/web/      | Next.js 15（App Router） | Webアプリケーション |
-| apps/desktop/  | Electron + Next.js       | 将来対応予定       |
+| ディレクトリ | 技術 | 説明 |
+| ------------ | ---- | ---- |
+| apps/web/ | Next.js 15（App Router）→ Cloudflare Pages | Web アプリケーション |
 
 **パッケージ層（packages/）**
 
@@ -43,11 +42,13 @@
 
 **外部サービス**
 
-| サービス     | 用途           | 無料枠                          |
-| ------------ | -------------- | ------------------------------- |
-| Turso        | 分散SQLite     | 9GB、500Mリクエスト             |
-| Railway      | ホスティング   | 従量課金                        |
-| AI Provider  | AI機能         | OpenAI / Anthropic / Google / xAI |
+| サービス | 用途 | 無料枠 |
+| -------- | ---- | ------ |
+| Cloudflare Pages | フロントエンドホスティング | 無制限リクエスト・500ビルド/月 |
+| Cloudflare Workers | API バックエンド | 100,000 リクエスト/日 |
+| Cloudflare D1 | データベース（SQLite） | 5GB・500万読み取り/日 |
+| Turso | 分散 SQLite（補完） | 9GB、500M リクエスト |
+| AI Provider | AI 機能 | OpenAI / Anthropic / Google / xAI |
 
 ---
 
@@ -127,7 +128,7 @@ pnpm-workspace.yaml にて以下のパッケージを管理対象として定義
 1. **App Router成熟**: Server Components、Streamingが安定
 2. **Turbopack**: 開発時のHMRが高速化（Webpack比10倍）
 3. **React 19準備完了**: Concurrent Features対応
-4. **Railway最適化**: スタンドアロンモードで効率的デプロイ
+4. **Cloudflare Pages最適化**: スタンドアロンモードで効率的エッジデプロイ
 
 **Next.js 15の活用機能**:
 
@@ -149,10 +150,10 @@ pnpm-workspace.yaml にて以下のパッケージを管理対象として定義
 
 **next.config.ts 設定方針**
 
-| 設定項目           | 値           | 説明                                  |
-| ------------------ | ------------ | ------------------------------------- |
-| output             | standalone   | Railway向け最適化                     |
-| experimental.ppr   | incremental  | Partial Prerenderingを段階的に有効化  |
+| 設定項目 | 値 | 説明 |
+| -------- | -- | ---- |
+| output | standalone | Cloudflare Pages / Edge 向け最適化 |
+| experimental.ppr | incremental | Partial Prerendering を段階的に有効化 |
 
 設定ファイルはNextConfig型を使用し、default exportとして定義する。
 

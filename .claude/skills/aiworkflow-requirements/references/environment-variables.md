@@ -87,7 +87,7 @@
 
 | 環境              | 保存場所                           |
 | ----------------- | ---------------------------------- |
-| ローカル開発      | `.env.local`（Gitignore必須）      |
+| ローカル開発      | `1Password Environments`（必要なら local `.env file` destination を mount） |
 | ステージング/本番 | Railway Variables / GitHub Secrets |
 
 #### 禁止事項
@@ -96,6 +96,8 @@
 - 認証情報をソースコード内にハードコードしない
 - 公開リポジトリで機密情報を共有しない
 - ログやエラーメッセージに機密情報を出力しない
+- ワークツリー内の平文 `.env` を秘密の正本にしない
+- `Secure Note` を環境変数の正本として使わない
 
 ### ローテーション戦略
 
@@ -319,8 +321,9 @@
 
 #### セットアップチェックリスト
 
-- [ ] `.env.example`を`.env.local`にコピー
-- [ ] 必須変数を設定
+- [ ] 1Password Developer を有効にする
+- [ ] Environment を作成する
+- [ ] 必要なら local `.env file` destination を設定する
 - [ ] `pnpm dev`で起動確認
 - [ ] ヘルスチェック成功
 

@@ -131,7 +131,6 @@
 | ドキュメント | 内容 |
 |------------|-----|
 | [security-principles.md](../references/security-principles.md) | セキュリティ原則 |
-| [security-electron-ipc.md](../references/security-electron-ipc.md) | IPC セキュリティ |
 
 ---
 

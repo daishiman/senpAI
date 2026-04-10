@@ -28,13 +28,14 @@
 
 ## パッケージ/ディレクトリ
 
-| 用語            | 定義                                                                     |
-| --------------- | ------------------------------------------------------------------------ |
-| packages/shared | Web/Desktop 共通コード。ui、core、infrastructure の3層で構成             |
-| apps/web        | Next.js Web アプリケーション。App Router、Server Components を使用       |
-| apps/desktop    | Electron デスクトップアプリケーション。Main/Preload/Renderer の3プロセス |
-| features        | 機能ごとの独立したビジネスロジック層。schema、executor、テストを含む     |
-| local-agent     | ローカルファイル監視エージェント。PM2 でプロセス管理                     |
+| 用語                             | 定義                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| packages/shared                  | Web アプリ共通コード。ui、core、infrastructure の3層で構成                    |
+| apps/web                         | Next.js Web アプリケーション。App Router、Server Components を使用            |
+| features                         | 機能ごとの独立したビジネスロジック層。schema、executor、テストを含む          |
+| packages/integrations/{service}/ | 外部サービス連携パッケージ。サービスごとに独立したインテグレーション層        |
+| apps/web/features/{workflow}/    | Webアプリのワークフロー機能フォルダ。UI、ロジック、テストを垂直スライスで集約 |
+| local-agent                      | ローカルファイル監視エージェント。PM2 でプロセス管理                          |
 
 ## インターフェース用語
 
@@ -54,7 +55,6 @@
 | Design Tokens           | デザイン要素を抽象化した変数。Global、Alias、Component の3層構造                              |
 | Headless UI             | スタイルを持たないロジックのみの UI コンポーネント。Radix UI が代表例                         |
 | Atomic Design           | コンポーネント階層。本システムでは Primitives/Patterns/Features/Templates の4層               |
-| Apple HIG               | Apple Human Interface Guidelines。macOS アプリのデザインガイドライン                          |
 | shadcn/ui               | Radix UI をベースにした再利用可能なコンポーネント集                                           |
 | React Portal            | React の`createPortal` API。DOM階層の任意の位置にコンポーネントをレンダリングする機能         |
 | Stacking Context        | CSS の z-index が有効な範囲を決定するレイヤー。`backdrop-filter`, `transform`等で作成される   |
@@ -72,20 +72,6 @@
 | axe-core   | アクセシビリティ自動テストエンジン。WCAG 2.1 AA 準拠をチェック      |
 | TDD        | Test-Driven Development。テストを先に書いてから実装するサイクル     |
 | MSW        | Mock Service Worker。API モックライブラリ                           |
-
-## Electron 用語
-
-| 用語             | 定義                                                                 |
-| ---------------- | -------------------------------------------------------------------- |
-| Main Process     | Electron のメインプロセス。Node.js 環境、システム API にアクセス可能 |
-| Renderer Process | Electron のレンダラープロセス。Chromium 環境、sandbox 有効           |
-| Preload Scripts  | Renderer と Main 間のセキュアなブリッジ。contextBridge を使用        |
-| contextBridge    | Renderer に安全に API を公開する Electron の仕組み                   |
-| contextIsolation | Renderer と Preload のコンテキスト分離。セキュリティ必須設定         |
-| nodeIntegration  | Renderer での Node.js API 使用設定。セキュリティ上、無効にする       |
-| electron-builder | Electron アプリのビルド・パッケージング・配布ツール                  |
-| electron-updater | Electron 自動更新システム。GitHub Releases/S3 対応                   |
-| IPC              | Inter-Process Communication。プロセス間通信                          |
 
 ## データベース用語
 
@@ -133,17 +119,20 @@
 
 | 用語           | 定義                                                     |
 | -------------- | -------------------------------------------------------- |
-| Railway        | 本システムのホスティング環境。PaaS                       |
-| Nixpacks       | Railway のビルダー。自動でビルド設定を検出               |
-| GitHub Actions | CI/CD パイプライン。テスト、ビルド、デプロイを自動化     |
-| Codecov        | コードカバレッジ可視化サービス。PRにカバレッジ差分をコメント（実装済み 2026-01-05） |
-| Code Coverage  | コードカバレッジ。テストがコードのどれだけをカバーしているかを示す指標。閾値80% |
-| lcov           | カバレッジレポートの標準フォーマット。Codecovとの連携に使用 |
-| PM2            | Node.js プロセスマネージャー。Local Agent の管理に使用   |
-| 構造化ログ     | JSON 形式のログ。request_id、workflow_id、user_id を含む |
-| 一時ストレージ | Railway の /tmp ディレクトリ。再デプロイ時に削除される   |
-| ヘルスチェック | システムの稼働状態を確認するエンドポイント               |
-| レート制限     | API の呼び出し回数を制限する仕組み                       |
+| Cloudflare Pages  | 本システムのフロントエンドホスティング環境。静的サイト/SSR対応のPaaS         |
+| Cloudflare Workers| エッジで動作するサーバーレスランタイム。APIルートのホスティングに使用        |
+| D1                | Cloudflare のエッジ SQLite データベース。Workers から直接アクセス可能        |
+| R2                | Cloudflare のオブジェクトストレージ。S3互換API。ファイル・バイナリの保存に使用 |
+| KV                | Cloudflare の分散エッジ Key-Value ストア。低レイテンシキャッシュ/セッション用 |
+| Wrangler          | Cloudflare Workers の CLI ツール。開発・デプロイ・D1/R2/KV 管理に使用       |
+| GitHub Actions    | CI/CD パイプライン。テスト、ビルド、デプロイを自動化                         |
+| Codecov           | コードカバレッジ可視化サービス。PRにカバレッジ差分をコメント（実装済み 2026-01-05） |
+| Code Coverage     | コードカバレッジ。テストがコードのどれだけをカバーしているかを示す指標。閾値80% |
+| lcov              | カバレッジレポートの標準フォーマット。Codecovとの連携に使用                  |
+| PM2               | Node.js プロセスマネージャー。Local Agent の管理に使用                       |
+| 構造化ログ        | JSON 形式のログ。request_id、workflow_id、user_id を含む                     |
+| ヘルスチェック    | システムの稼働状態を確認するエンドポイント                                   |
+| レート制限        | API の呼び出し回数を制限する仕組み                                           |
 
 ## AI 用語
 
@@ -259,7 +248,6 @@
 | libSQL        | https://libsql.org          |
 | Vercel AI SDK | https://sdk.vercel.ai/docs  |
 | discord.js    | https://discord.js.org      |
-| Railway       | https://docs.railway.app    |
 
 ### フロントエンド・UI
 
@@ -282,14 +270,16 @@
 | axe-core              | https://github.com/dequelabs/axe-core |
 | MSW                   | https://mswjs.io                      |
 
-### Electron
+### Cloudflare
 
-| 技術             | URL                                                           |
-| ---------------- | ------------------------------------------------------------- |
-| Electron         | https://www.electronjs.org/docs/latest                        |
-| electron-builder | https://www.electron.build                                    |
-| electron-updater | https://www.electron.build/auto-update                        |
-| Apple HIG        | https://developer.apple.com/design/human-interface-guidelines |
+| 技術               | URL                                          |
+| ------------------ | -------------------------------------------- |
+| Cloudflare Workers | https://developers.cloudflare.com/workers/   |
+| Cloudflare Pages   | https://developers.cloudflare.com/pages/     |
+| D1                 | https://developers.cloudflare.com/d1/        |
+| R2                 | https://developers.cloudflare.com/r2/        |
+| KV                 | https://developers.cloudflare.com/kv/        |
+| Wrangler           | https://developers.cloudflare.com/workers/wrangler/ |
 
 ### セキュリティ
 

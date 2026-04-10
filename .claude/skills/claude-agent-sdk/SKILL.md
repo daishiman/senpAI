@@ -2,17 +2,17 @@
 name: claude-agent-sdk
 description: |
   Claude Agent SDK（@anthropic-ai/claude-agent-sdk）および直接Anthropic SDK（@anthropic-ai/sdk）を使用したエージェント統合の実装を専門とするスキル。
-  query() API、Hooksシステム、Permission Control、Electron統合、ストリーミング処理、Direct SDKパターンを支援します。
+  query() API、Hooksシステム、Permission Control、ストリーミング処理、Direct SDKパターンを支援します。
+  Webアプリ（Next.js / Cloudflare Workers）での統合に対応。
 
   Anchors:
   • Claude Agent SDK Official Docs / 適用: SDK API、Hooks、Permissions / 目的: 公式パターンに準拠した実装
-  • Anthropic SDK (@anthropic-ai/sdk) / 適用: Direct SDK呼び出し / 目的: シンプルなMain Process統合
-  • Electron IPC Best Practices / 適用: Main-Renderer間通信 / 目的: セキュアなプロセス間通信
+  • Anthropic SDK (@anthropic-ai/sdk) / 適用: Direct SDK呼び出し / 目的: シンプルなサーバーサイド統合
   • TypeScript Handbook / 適用: 型定義、ジェネリクス / 目的: 型安全なSDK統合
 
   Trigger:
-  Claude Agent SDKを使用したエージェント機能実装、query() APIストリーミング処理、Hooksシステム実装、Electron統合、Permission Control設計、MCP統合、Direct SDK統合を行う場合に使用。
-  claude-agent-sdk, query API, PreToolUse, PostToolUse, PermissionRequest, Electron IPC, MCP, ストリーミング, 権限制御, @anthropic-ai/sdk, Direct SDK
+  Claude Agent SDKを使用したエージェント機能実装、query() APIストリーミング処理、Hooksシステム実装、Permission Control設計、MCP統合、Direct SDK統合を行う場合に使用。
+  claude-agent-sdk, query API, PreToolUse, PostToolUse, PermissionRequest, MCP, ストリーミング, 権限制御, @anthropic-ai/sdk, Direct SDK, Cloudflare Workers, Next.js
 
 allowed-tools:
   - Read
@@ -27,7 +27,9 @@ allowed-tools:
 
 ## 概要
 
-Claude Agent SDK（`@anthropic-ai/claude-agent-sdk`）を使用したエージェント統合の実装を専門とするスキル。query() API、Hooksシステム、Permission Control、Electron統合、ストリーミング処理を支援します。
+Claude Agent SDK（`@anthropic-ai/claude-agent-sdk`）を使用したエージェント統合の実装を専門とするスキル。query() API、Hooksシステム、Permission Control、ストリーミング処理を支援します。
+
+**対象環境**: Next.js (App Router / API Routes)、Cloudflare Workers
 
 **対象言語**: TypeScript のみ
 
@@ -58,20 +60,15 @@ node .claude/skills/claude-agent-sdk/scripts/fetch-latest-info.mjs --category np
 3. `references/query-api.md` で基礎パターンを確認
 4. `references/permission-control.md` で権限設計を確認
 
-**Task**: `agents/analyze-agent-requirements.md` を参照
-
 ### Phase 2: SDK統合の実装
 
 **目的**: query() APIとHooksを実装し、エージェント機能を構築する
 
 **アクション**:
 
-1. `assets/agent-handler-template.ts` を参照してIPCハンドラを実装
+1. `assets/agent-handler-template.ts` を参照してAPIハンドラを実装
 2. `references/hooks-system.md` でHooksパターンを確認
-3. `references/electron-ipc.md` でElectron統合パターンを確認
-4. ストリーミング処理とエラーハンドリングを実装
-
-**Task**: `agents/implement-agent-integration.md` を参照
+3. ストリーミング処理とエラーハンドリングを実装
 
 ### Phase 3: 検証と記録
 
@@ -83,87 +80,65 @@ node .claude/skills/claude-agent-sdk/scripts/fetch-latest-info.mjs --category np
 2. Permission Controlのテスト
 3. 実装パターンのドキュメント化
 
-**Task**: `agents/validate-agent-setup.md` を参照
+## Task 仕様ナビ
 
-## Task仕様ナビ
-
-| Task                         | 概要                                              | 対応する Phase | リソース                                                          |
-| ---------------------------- | ------------------------------------------------- | -------------- | ----------------------------------------------------------------- |
-| query() API基本実装          | ストリーミングメッセージ処理の基本                | Phase 1, 2     | query-api.md, agent-handler-template.ts                           |
-| Verify Engine実装            | SkillCreatorVerificationEngine Layer 1-4 チェック | Phase 5, 6     | implementation-artifacts.md, electron-ipc.md                      |
-| Hooks実装                    | PreToolUse/PostToolUse/Permission                 | Phase 2        | hooks-system.md                                                   |
-| Hooks Factory                | createHooks, セキュリティチェック                 | Phase 2        | hooks-system.md（TASK-3-1-B）                                     |
-| Governance Hooks Factory     | Phase別 createGovernanceHooks, AuditSink連携      | Phase 2        | hooks-system.md（TASK-P0-09）, permission-control.md（TASK-P0-09）|
-| Approval Request Producer    | PreToolUse での pushApprovalRequest() 発火接続    | Phase 2        | hooks-system.md（UT-IMP-SAFETY-GOV-PUSH-REQUEST-PRODUCER-001）   |
-| Permission Control設計       | 権限ルールの設計と実装                            | Phase 1, 2     | permission-control.md                                             |
-| Phase-Based Policy           | plan/execute/verify/improve 別ポリシー定義        | Phase 2        | permission-control.md（TASK-P0-09）                               |
-| Electron IPC統合             | Main-Renderer間のAgent通信                        | Phase 2        | electron-ipc.md                                                   |
-| エラーハンドリング           | AbortSignal、タイムアウト、リトライ               | Phase 2        | error-handling.md, hooks-system.md                                |
-| リトライ機構                 | Exponential Backoff, Jitter, エラー分類           | Phase 2        | error-handling.md, retry-patterns.md                              |
-| MCP統合                      | MCPサーバーとの連携                               | Phase 2, 3     | mcp-integration.md                                                |
-| セキュリティ設計             | サンドボックス、ホスティング                      | Phase 2, 3     | security-sandboxing.md                                            |
-| パス制限・セキュリティ       | resolvePathSafely, null byte チェック, path traversal対策 | Phase 2, 3 | security-sandboxing.md（TASK-P0-09）                         |
-| External API IPC統合         | RequestExternalApiConfig custom tool, 並行フロー, 秘匿化 | Phase 2    | electron-ipc.md（TASK-SDK-SC-03）                            |
-| Skill Output Integration     | output-ready / overwrite-approved / open-skill IPC, SkillCreatorOutputHandler, SkillRegistry, SkillCreatorResultPanel | Phase 2, 3 | electron-ipc.md（TASK-SDK-SC-04）                 |
-| Persist統合（execute→SkillFileWriter） | execute() Step 3.5-3.6 で parseLlmResponseToContent → SkillFileWriter.persist、二重パイプライン設計（A経路/B経路） | Phase 2, 3 | implementation-artifacts.md（TASK-P0-05） |
-| Session Resume（checkpoint-based recovery） | IPC 4層統合パターン（main/ipc → service/facade → preload → renderer/hook）でセッション復元。listSessions / getSessionDetail / resumeSessionWithResult / deleteSession / cleanupExpiredSessions の5チャネル | Phase 2, 3 | electron-ipc.md（TASK-P0-08） |
+| Task | 概要 | 対応する Phase | リソース |
+| ---- | ---- | -------------- | -------- |
+| query() API 基本実装 | ストリーミングメッセージ処理の基本 | Phase 1, 2 | query-api.md |
+| Hooks 実装 | PreToolUse/PostToolUse/Permission | Phase 2 | hooks-system.md |
+| Hooks Factory | createHooks, セキュリティチェック | Phase 2 | hooks-system.md |
+| Permission Control 設計 | 権限ルールの設計と実装 | Phase 1, 2 | permission-control.md |
+| エラーハンドリング | AbortSignal、タイムアウト、リトライ | Phase 2 | error-handling.md |
+| リトライ機構 | Exponential Backoff, Jitter, エラー分類 | Phase 2 | retry-patterns.md |
+| MCP 統合 | MCP サーバーとの連携 | Phase 2, 3 | mcp-integration.md |
+| セキュリティ設計 | サンドボックス、権限制御 | Phase 2, 3 | security-sandboxing.md |
+| Next.js API Route 統合 | App Router での Agent 統合 | Phase 2 | implementation-artifacts.md |
+| Cloudflare Workers 統合 | Workers での Agent 統合 | Phase 2 | implementation-artifacts.md |
 
 ## パターン選択ガイド
 
 ### claude-agent-sdk vs 直接SDK使用
 
-| 要件                 | claude-agent-sdk | 直接SDK (`@anthropic-ai/sdk`) |
-| -------------------- | ---------------- | ----------------------------- |
-| Hooks (PreToolUse等) | ✅ 必要          | ❌ 不要                       |
-| Permission Control   | ✅ 必要          | ❌ 不要                       |
-| ストリーミングUI     | ✅ 複雑          | ⚪ シンプル                   |
-| Main Process専用     | ⚪ 可能          | ✅ 推奨                       |
-| バッチ処理           | ⚪ 可能          | ✅ 推奨                       |
+| 要件 | claude-agent-sdk | 直接SDK (`@anthropic-ai/sdk`) |
+| ---- | ---------------- | ----------------------------- |
+| Hooks (PreToolUse 等) | ✅ 必要 | ❌ 不要 |
+| Permission Control | ✅ 必要 | ❌ 不要 |
+| ストリーミング UI | ✅ 複雑 | ⚪ シンプル |
+| API Route / Workers | ⚪ 可能 | ✅ 推奨 |
+| バッチ処理 | ⚪ 可能 | ✅ 推奨 |
 
 **推奨**:
 
 - **対話型エージェント** → `@anthropic-ai/claude-agent-sdk`
 - **バックグラウンド処理/バッチ** → `@anthropic-ai/sdk` 直接使用
 
-### Direct Anthropic SDK Pattern
+### Direct Anthropic SDK Pattern（Next.js API Route）
 
-Main Processでシンプルなクエリを実行する場合のパターン。
+Next.js API Route または Cloudflare Workers でシンプルなクエリを実行する場合のパターン。
 
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
-import { safeStorage } from "electron";
-import Store from "electron-store";
 
-// APIキー管理（safeStorage + 環境変数フォールバック）
-async function getApiKey(): Promise<string> {
-  const store = new Store<{ anthropic_api_key?: string }>();
-  const encrypted = store.get("anthropic_api_key");
-
-  if (encrypted && safeStorage.isEncryptionAvailable()) {
-    return safeStorage.decryptString(Buffer.from(encrypted, "base64"));
-  }
-
-  const envKey = process.env.ANTHROPIC_API_KEY;
-  if (envKey) return envKey;
-
-  throw new Error("API key not configured");
+// APIキー管理（環境変数から取得）
+function getApiKey(): string {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error("ANTHROPIC_API_KEY is not set");
+  return key;
 }
 
-// 直接SDK呼び出し
-async function executeQuery(
-  prompt: string,
-  systemPrompt?: string,
-  timeout = 30000,
-): Promise<string> {
-  const client = new Anthropic({ apiKey: await getApiKey() });
+// Next.js API Route（App Router）
+export async function POST(request: Request) {
+  const { prompt, systemPrompt } = await request.json();
+
+  const client = new Anthropic({ apiKey: getApiKey() });
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const response = await client.messages.create(
       {
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 8192,
         ...(systemPrompt ? { system: systemPrompt } : {}),
         messages: [{ role: "user", content: prompt }],
@@ -172,14 +147,14 @@ async function executeQuery(
     );
 
     const textContent = response.content.find((b) => b.type === "text");
-    return textContent?.type === "text" ? textContent.text : "";
+    const text = textContent?.type === "text" ? textContent.text : "";
+
+    return Response.json({ result: text });
   } finally {
     clearTimeout(timeoutId);
   }
 }
 ```
-
-📖 実装参照: `apps/desktop/src/main/slide/agent-client.ts`
 
 ### SkillExecutor Pattern
 
@@ -189,7 +164,7 @@ async function executeQuery(
 interface SkillExecutor {
   execute(
     phase: SkillPhase,
-    projectPath: string,
+    context: ExecutionContext,
   ): Promise<SkillExecutionResult>;
   cancel(): void;
   onProgress(callback: (progress: number) => void): void;
@@ -205,60 +180,55 @@ const skillMap: Record<SkillPhase, string> = {
 };
 ```
 
-📖 実装参照: `apps/desktop/src/main/slide/skill-executor.ts`
+### AuthKeyService 統合パターン（Webアプリ）
 
-### AuthKeyService 統合パターン
-
-Electron環境でのセキュアな認証キー管理パターン。Main Processでキーを安全に保持し、SkillExecutorにDIで注入する。
+Webアプリ環境でのセキュアな認証キー管理パターン。
 
 ```typescript
-// AuthKeyService - 認証キーの暗号化保存・取得
-interface AuthKeyService {
-  setKey(key: string): Promise<void>;
-  getKey(): Promise<string | null>;
-  deleteKey(): Promise<void>;
-  hasKey(): Promise<boolean>;
-  validateKey(): Promise<{ valid: boolean; error?: string }>;
+// 環境変数から取得（サーバーサイド専用）
+function getAuthKey(): string {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error("API key not configured");
+  return key;
 }
 
-// SkillExecutor への DI パターン
-const skillExecutor = new SkillExecutor({
-  authKeyService,  // DI で注入
-  retryConfig: { maxRetries: 3 },
-});
+// Cloudflare Workers での取得（Bindings使用）
+interface Env {
+  ANTHROPIC_API_KEY: string;
+}
 
-// query() 呼び出し時に自動でキーを取得
-const result = await skillExecutor.execute("hearing", projectPath);
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const apiKey = env.ANTHROPIC_API_KEY;
+    // ...
+  },
+};
 ```
 
 **認証キー解決優先順位**:
 
 1. `options.apiKey` で直接指定
-2. `AuthKeyService.getKey()` からの取得（Electron環境）
-3. 環境変数 `ANTHROPIC_API_KEY`
-
-📖 実装参照: `apps/desktop/src/main/services/auth/AuthKeyService.ts`
-📖 IPC参照: `apps/desktop/src/main/ipc/authKeyHandlers.ts`
+2. 環境変数 `ANTHROPIC_API_KEY`（Next.js: `.env.local`）
+3. Cloudflare Workers Bindings の `env.ANTHROPIC_API_KEY`
 
 ## ベストプラクティス
 
 ### すべきこと
 
-- Permission Rulesで適切な権限制御を設計する
-- PreToolUseフックで危険なコマンドをブロックする
-- AbortSignalを使用してタイムアウト処理を実装する
-- IPCチャネル名を一貫した命名規則で設計する
-- ストリーミングメッセージを適切にUI更新に反映する
+- Permission Rules で適切な権限制御を設計する
+- PreToolUse フックで危険なコマンドをブロックする
+- AbortSignal を使用してタイムアウト処理を実装する
+- ストリーミングメッセージを適切に UI 更新に反映する
 - エラー発生時のフォールバック処理を実装する
+- API キーはサーバーサイドのみで扱う（クライアントに露出させない）
 
 ### 避けるべきこと
 
-- permissionMode: 'bypassPermissions' を本番環境で使用する
-- Hookなしで危険なツール（Bash等）を許可する
-- Main ProcessでUIロジックを処理する
+- `permissionMode: 'bypassPermissions'` を本番環境で使用する
+- Hook なしで危険なツール（Bash 等）を許可する
 - ストリーミング中のエラーを無視する
-- APIキーをRenderer Processで扱う
-- signal.abortedのチェックを省略する
+- API キーをクライアントサイドのコードに含める
+- `signal.aborted` のチェックを省略する
 
 ## クイックリファレンス
 
@@ -288,7 +258,7 @@ for await (const message of conversation) {
 }
 ```
 
-### Hook実装例
+### Hook 実装例
 
 ```typescript
 const options = {
@@ -320,9 +290,6 @@ cat .claude/skills/claude-agent-sdk/references/hooks-system.md
 # Permission Control（4層システム、ルール）
 cat .claude/skills/claude-agent-sdk/references/permission-control.md
 
-# Electron IPC統合
-cat .claude/skills/claude-agent-sdk/references/electron-ipc.md
-
 # エラーハンドリング（AbortSignal、タイムアウト）
 cat .claude/skills/claude-agent-sdk/references/error-handling.md
 
@@ -349,22 +316,9 @@ cat .claude/skills/claude-agent-sdk/assets/agent-handler-template.ts
 cat .claude/skills/claude-agent-sdk/assets/use-agent-hook-template.ts
 ```
 
-### スクリプト実行
-
-```bash
-# 最新情報取得
-node .claude/skills/claude-agent-sdk/scripts/fetch-latest-info.mjs --help
-
-# 設定検証
-node .claude/skills/claude-agent-sdk/scripts/validate-agent-setup.mjs --help
-```
-
 ## 関連ドキュメント
 
-| ドキュメント                  | パス                                                                                 | 説明                                |
-| ----------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------- |
-| Agent SDKインターフェース仕様 | `.claude/skills/aiworkflow-requirements/references/interfaces-agent-sdk.md`          | 統合システム設計仕様（型定義、IPC） |
-| 実装ガイド                    | `docs/30-workflows/claude-code-integration/outputs/phase-12/implementation-guide.md` | 概念的・技術的実装ガイド            |
-| 実装成果物一覧                | `references/implementation-artifacts.md`                                             | タスク別の成果物・実装ファイル      |
-
-タスク別の成果物・実装ファイル詳細は [references/implementation-artifacts.md](references/implementation-artifacts.md) を参照。
+| ドキュメント | パス | 説明 |
+| ------------ | ---- | ---- |
+| Agent SDK インターフェース仕様 | `.claude/skills/aiworkflow-requirements/references/interfaces-agent-sdk.md` | 統合システム設計仕様（型定義） |
+| 実装成果物一覧 | `references/implementation-artifacts.md` | タスク別の成果物・実装ファイル |

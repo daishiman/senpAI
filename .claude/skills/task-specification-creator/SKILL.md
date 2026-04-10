@@ -7,7 +7,7 @@ description: |
   • Continuous Delivery / 適用: フェーズゲート / 目的: 品質パイプライン
   • DDD / 適用: ユビキタス言語 / 目的: 用語統一
   Trigger:
-  タスク仕様書作成, タスク分解, ワークフロー設計, Phase実行, IPC Bridge API統一, Preload APIパターン, safeInvoke, safeOn
+  タスク仕様書作成, タスク分解, ワークフロー設計, Phase実行, インテグレーション設計, ワークフローパッケージ, Cloudflare Workers, Web API設計, 外部連携パッケージ
 allowed-tools:
   - Read
   - Write
@@ -320,15 +320,15 @@ node scripts/detect-unassigned-tasks.js --scan packages/shared/src --output .tmp
 | **[Feedback 6]** ViewType を追加した際に navigation 契約・store 型・既存テストの3点更新が漏れる                                                                      | `store/types.ts`（ViewType union）/ `skillLifecycleJourney.ts`（正規化関数・定数）/ renderView テスト を same-wave で更新し、`ui-ux-navigation.md` の ViewType テーブルも同時同期する。Phase 1 設計メモに「追加 ViewType: XYZ」を明示しておくと漏れが防げる                |
 | **[FB-UI-02-1]** Phase 9 QA で「ファイル削除」を PASS 基準にすると stub 化タスクが FAIL 扱いになる                                                                   | Phase 9 の削除確認は「git delete されている OR `export {}` stub 化かつ live import ゼロのいずれか」を PASS とする。たとえば、廃止ファイルを stub 化した場合は `grep -rn "import.*廃止ファイル名" src/` でゼロ件を証跡に残す                                                |
 | **[Feedback TASK-UI-04]** 実装完了後に `artifacts.json` status が `spec_created` / `in_progress` のまま放置される                                                    | 実装 Phase（Phase 5 or 最終実装 Phase）完了時に `complete-phase.js` を必ず実行し、status を `completed` に更新する。実装完了と仕様書ステータス更新は同一 wave で行う（後回しは乖離蓄積の主因）。有効値: `spec_created` / `in_progress` / `completed` / `phase12_completed` |
-| **[FB-SDK-07-2]** Phase 1 で新規 IPC surface を定義する際に Preload API 経由が明記されない                                                                           | Phase 1（要件定義）では新規 IPC surface を定義する場合、「Preload API 経由必須」を明記する。直接 `ipcRenderer.on` は禁止パターンとして記録する                                                                                                                             |
-| **[FB-SDK-07-4]** Phase 1 で既存 API の命名パターンを確認せずに新規 API を命名し、Phase 3 で MINOR 指摘を受ける                                                      | Phase 1（要件定義）では既存の `safeOn` / `safeInvoke` 等の命名パターンを確認し、新規 API の命名規則一貫性を担保する。命名ドリフトは Phase 3 レビューゲートの MINOR 指摘の主要因となる                                                                                      |
+| **[FB-SDK-07-2]** *※Electron Desktop 向け（現 Web 版では不適用）* Phase 1 で新規 IPC surface を定義する際に Preload API 経由が明記されない                           | Phase 1（要件定義）では新規 IPC surface を定義する場合、「Preload API 経由必須」を明記する。直接 `ipcRenderer.on` は禁止パターンとして記録する（Web 版では Workers API エンドポイント定義が相当）                                                                                                                             |
+| **[FB-SDK-07-4]** *※Electron Desktop 向け（現 Web 版では不適用）* Phase 1 で既存 API の命名パターンを確認せずに新規 API を命名し、Phase 3 で MINOR 指摘を受ける      | Phase 1（要件定義）では既存の `safeOn` / `safeInvoke` 等の命名パターンを確認し、新規 API の命名規則一貫性を担保する。命名ドリフトは Phase 3 レビューゲートの MINOR 指摘の主要因となる（Web 版では Workers API ルート命名規則の確認が相当）                                                                                      |
 | **[Feedback W1-02b-1]** UI task の `screenshot-plan.json` が `mode: "NON_VISUAL"` のまま Phase 11 を迎えやすい                                                       | UI コンポーネント変更タスクでは `screenshot-plan.json` 生成時に `mode: "VISUAL"` をデフォルトにする。`phase11-capture-metadata.json` の `taskId` が現行タスク ID と一致するか Phase 11 着手前に確認する（`jq '.taskId' outputs/phase-11/phase11-capture-metadata.json`）   |
 | **[Feedback W1-02b-2]** multi-step wizard 設計で「ステップ間の state ownership と引き渡し項目」が Phase 2 設計書に未記載                                             | Phase 2（設計）でウィザード / マルチステップ UI を設計する場合、「ステップ間 state 引き渡しテーブル」を必須セクションとして設ける。`smartDefaults` など推論値の反映タイミング（初回のみ / 都度上書き / ユーザー優先）は decision 欄で固定する                              |
 | **[Feedback W1-02b-3]** `implementation-guide.md` の callback 名・props 名が実装と一致していない（identifier drift）                                                 | Phase 12 Task 12-6 で `implementation-guide.md` 内の識別子を現行コードで `grep` 確認する。スニペットは型定義・props interface から引用し、手書き snippets を避ける                                                                                                         |
 | **[Feedback W1-02b-4]** renderer UI コンポーネントで node-only パッケージを直接 import し、Vite browser bundle が runtime error になる                               | renderer コンポーネントでは node-only パッケージ（`node-cron` 等）を直接 import しない。cron/schedule 検証は browser-safe ユーティリティに切り出す。Phase 11 capture 前に「ブラウザで実際に route を開く smoke test」を必須にする                                          |
 | **[Feedback W0-RV-001]** minLength / maxLength のテストケースで境界値文字列の実文字数を確認せずに誤った長さで書く（例: `"十文字以上の目的"` = 実際は 7 文字）        | テスト文字列を書く前に `"...".length` で実文字数を確認する。日本語の漢数字表記の意味と `.length` は別物。境界値テストは `// length: N` コメントを付けてから書く                                                                                                            |
-| **[Feedback SC-13-1]** IPC surface 追加時に `apps/desktop/src/preload/channels.ts` の `ALLOWED_INVOKE_CHANNELS` への追記が漏れる                                     | IPC surface 追加タスクでは Phase 2 成果物のチェックリストに「`ALLOWED_INVOKE_CHANNELS` への追記」を必須項目として記載する。`shared/ipc/channels.ts` への定数追加だけでは Renderer から呼び出せない                                                                         |
-| **[Feedback SC-13-2]** 公開 IPC メソッド名（`verify(skillName, ...)`）と内部エンジンメソッド名（`verifySkill(skillDir)`）が酷似し Phase 2 設計時に責務が不明確になる | 公開 surface と内部エンジンで名前が近い場合、Phase 2 成果物に「内部型 → 公開 DTO 変換表」と「解決レイヤ名称（例: `resolveVerifySkillDir`）」を必須セクションとして設ける                                                                                                   |
+| **[Feedback SC-13-1]** *※Electron Desktop 向け（現 Web 版では不適用）* IPC surface 追加時に `apps/desktop/src/preload/channels.ts` の `ALLOWED_INVOKE_CHANNELS` への追記が漏れる | IPC surface 追加タスクでは Phase 2 成果物のチェックリストに「`ALLOWED_INVOKE_CHANNELS` への追記」を必須項目として記載する。`shared/ipc/channels.ts` への定数追加だけでは Renderer から呼び出せない（Web 版では Workers ルート登録 + CORS 設定漏れが相当）                                                                         |
+| **[Feedback SC-13-2]** *※Electron Desktop 向け（現 Web 版では不適用）* 公開 IPC メソッド名（`verify(skillName, ...)`）と内部エンジンメソッド名（`verifySkill(skillDir)`）が酷似し Phase 2 設計時に責務が不明確になる | 公開 surface と内部エンジンで名前が近い場合、Phase 2 成果物に「内部型 → 公開 DTO 変換表」と「解決レイヤ名称（例: `resolveVerifySkillDir`）」を必須セクションとして設ける（Web 版では REST エンドポイント ↔ サービス層の命名分離が相当）                                                                                                   |
 
 ### Phase 12 苦戦防止Tips
 
@@ -475,7 +475,7 @@ UI/UX 実装を含む task では Phase 11 で screenshot と Apple UI/UX 視覚
 | エラーハンドリング | `error-handling.md`                |
 | インターフェース   | `interfaces-*.md`                  |
 
-Electron desktop task では Renderer、Main、IPC、Preload、ローカルストレージの境界を都度明記する。詳細は [references/quality-standards.md](references/quality-standards.md) を参照。
+Web/API task では Browser、Server (Workers)、外部インテグレーション（packages/integrations/）、Cloudflare バインディングの境界を都度明記する。詳細は [references/quality-standards.md](references/quality-standards.md) を参照。
 
 ## 検証コマンド
 

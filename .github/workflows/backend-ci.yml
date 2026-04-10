@@ -2,9 +2,9 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 # 最小権限の原則
@@ -31,8 +31,9 @@ jobs:
         with:
           filters: |
             backend:
-              - 'apps/backend/**'
+              - 'apps/api/**'
               - 'packages/shared/**'
+              - 'packages/integrations/**'
               - '.github/workflows/backend-ci.yml'
 
   ci:
@@ -63,17 +64,17 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @repo/shared build
 
-      - name: Build backend
-        run: pnpm --filter @repo/backend build
+      - name: Build API (Workers)
+        run: pnpm --filter @repo/api build
 
-      - name: Run backend tests
-        run: pnpm --filter @repo/backend test:run
+      - name: Run API tests
+        run: pnpm --filter @repo/api test:run
 
       - name: Type check
-        run: pnpm --filter @repo/backend typecheck
+        run: pnpm --filter @repo/api typecheck
 
       - name: Lint
-        run: pnpm --filter @repo/backend lint
+        run: pnpm --filter @repo/api lint
 
   ci-skip:
     name: Validate Build
@@ -81,53 +82,49 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend != 'true'
     steps:
-      - run: echo "No backend changes detected. Skipping."
+      - run: echo "No API changes detected. Skipping."
 
   deploy:
-    name: Deploy to Railway
+    name: Deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: ci
-    if: false # Railway 運用停止中のため deploy を無効化
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && github.event_name == 'push'
     environment:
-      name: production
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          echo "🚀 Deploying to Railway..."
-          set +e
-          DEPLOY_OUTPUT="$(railway up --service backend --detach 2>&1)"
-          DEPLOY_EXIT_CODE=$?
-          set -e
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
 
-          echo "$DEPLOY_OUTPUT"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
-            if echo "$DEPLOY_OUTPUT" | grep -qi "Usage limit exceeded"; then
-              echo "::error title=Railway usage limit exceeded::Railway の Hard limit を超過しています。Railway Dashboard > Usage で Hard limit を引き上げるか解除してください。"
-            fi
-            exit $DEPLOY_EXIT_CODE
-          fi
+      - name: Build shared package
+        run: pnpm --filter @repo/shared build
 
-          echo "✅ Deployment triggered successfully"
-
-      - name: Wait for deployment
-        run: sleep 30
+      - name: Deploy API to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config apps/api/wrangler.toml --env ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Health check
         env:
-          RAILWAY_DOMAIN: ${{ secrets.RAILWAY_DOMAIN }}
+          API_DOMAIN: ${{ github.ref == 'refs/heads/main' && vars.CLOUDFLARE_WORKERS_DOMAIN || vars.CLOUDFLARE_WORKERS_STAGING_DOMAIN }}
         run: |
-          if [ -z "$RAILWAY_DOMAIN" ]; then
-            echo "⚠️  RAILWAY_DOMAIN が設定されていません。ヘルスチェックをスキップします。"
+          if [ -z "$API_DOMAIN" ]; then
+            echo "⚠️  CLOUDFLARE_WORKERS_DOMAIN が設定されていません。ヘルスチェックをスキップします。"
             exit 0
           fi
 
@@ -137,9 +134,8 @@ jobs:
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "ヘルスチェック試行 $((RETRY_COUNT + 1))/$MAX_RETRIES..."
 
-            if curl -f -s "https://${RAILWAY_DOMAIN}/api/health" > /dev/null; then
+            if curl -f -s "https://${API_DOMAIN}/api/health" > /dev/null; then
               echo "✅ デプロイ成功！"
-              curl -s "https://${RAILWAY_DOMAIN}/api/health" | jq .
               exit 0
             fi
 
@@ -156,7 +152,7 @@ jobs:
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: success
-          service: backend
+          service: api
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
@@ -166,7 +162,7 @@ jobs:
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: failure
-          service: backend
-          error_message: "Deployment or health check failed"
+          service: api
+          error_message: "Cloudflare Workers deployment failed"
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

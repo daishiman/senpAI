@@ -32,7 +32,7 @@
 | **単一責任の原則（SRP）** | 1つのモジュールは1つの責務のみ | サービス分割、Slice分割 |
 | **依存性逆転の原則（DIP）** | 上位モジュールは下位に依存しない | インターフェース定義 |
 | **関心の分離（SoC）** | UI/ロジック/データを分離 | レイヤー構成 |
-| **最小権限の原則** | 必要最小限のアクセス権のみ付与 | IPC Whitelist |
+| **最小権限の原則** | 必要最小限のアクセス権のみ付与 | Cloudflare API Token スコープ / Auth Middleware |
 
 ---
 
@@ -42,11 +42,12 @@
 
 | 順序 | レイヤー | コンポーネント | 依存先 |
 |-----|---------|--------------|-------|
-| 1 | Application Layer | apps/web/ (Next.js) | Infrastructure Layer |
-| 1 | Application Layer | apps/desktop/ (Electron) | Infrastructure Layer |
-| 2 | Infrastructure Layer | packages/shared/infrastructure/ (DB, AI, Discord, 外部サービス) | Domain Layer |
-| 3 | Domain Layer | shared/core/ (エンティティ) | なし |
-| 3 | Domain Layer | shared/types/ (型定義, Zod) | なし |
+| 1 | Application Layer | apps/web/ (Next.js + Cloudflare Pages) | Integration Layer, Infrastructure Layer |
+| 1 | Application Layer | apps/api/ (Cloudflare Workers) | Integration Layer, Infrastructure Layer |
+| 2 | Integration Layer | packages/integrations/{service}/ (外部サービス連携ツール) | Domain Layer |
+| 3 | Infrastructure Layer | packages/shared/infrastructure/ (DB, AI, 外部サービス) | Domain Layer |
+| 4 | Domain Layer | shared/core/ (エンティティ) | なし |
+| 4 | Domain Layer | shared/types/ (型定義, Zod) | なし |
 
 **依存ルール**: 上位レイヤーは下位レイヤーにのみ依存可能。Domain Layerは外部依存ゼロを維持。
 
@@ -58,9 +59,10 @@
 | 型定義 | packages/shared/src/types/ | 型定義、Zodスキーマ | なし |
 | ドメインサービス | packages/shared/src/services/ | ビジネスロジック | types/ のみ |
 | インフラ | packages/shared/infrastructure/ | 外部サービス連携 | core/, types/ |
+| インテグレーション | packages/integrations/{service}/ | 外部API連携ツールパッケージ | core/, types/ |
 | UI | packages/shared/ui/ | 共通コンポーネント | core/ |
-| Webアプリ | apps/web/ | Next.js App Router | shared/* |
-| Desktopアプリ | apps/desktop/ | Electron | shared/* |
+| Webアプリ | apps/web/ | Next.js App Router (Cloudflare Pages) | shared/*, integrations/* |
+| APIサーバー | apps/api/ | Cloudflare Workers (Hono) | shared/*, integrations/* |
 
 📖 詳細: [architecture-monorepo.md](./architecture-monorepo.md)
 
@@ -72,9 +74,9 @@
 
 | パターン | 適用箇所 | 目的 | 参照 |
 |---------|---------|-----|-----|
-| **Facade** | EnvironmentService, SkillService, SkillCreatorService | 複雑なサブシステムへの単純なインターフェース | arch-electron-services.md |
-| **Repository** | SQLite操作（better-sqlite3） | データアクセスの抽象化 | arch-ipc-persistence.md |
-| **Bridge** | IPC通信（Main↔Renderer） | 実装と抽象の分離 | security-electron-ipc.md |
+| **Facade** | SkillService, SkillCreatorService | 複雑なサブシステムへの単純なインターフェース | architecture-patterns.md |
+| **Repository** | Cloudflare D1操作 | データアクセスの抽象化 | database-schema.md |
+| **API Route Handler** | Hono ルート（apps/api/src/routes/） | HTTPリクエストルーティング | deployment-core.md |
 
 ### 振る舞いパターン
 
@@ -89,10 +91,10 @@
 | パターン | 適用箇所 | 目的 | 参照 |
 |---------|---------|-----|-----|
 | **Slice Pattern** | Zustand Store | 機能単位の状態分離 | arch-state-management.md |
-| **IPC Handler Registration** | registerAllIpcHandlers | ハンドラの一元管理 | arch-ipc-persistence.md |
-| **IPC Handler Lifecycle** | unregisterAllIpcHandlers | macOS activate時の二重登録防止 | security-electron-ipc.md |
-| **Conversation DB Graceful Degradation** | registerConversationHandlers | DB障害時のフォールバック応答 | arch-ipc-persistence.md |
-| **Whitelist Pattern** | IPC Channel定義 | セキュアな通信 | security-electron-ipc.md |
+| **Integration Package** | packages/integrations/{service}/ | 外部サービス連携の再利用単位化 | arch-integration-packages.md |
+| **Workflow Feature** | apps/web/features/{workflow}/ | インテグレーションを組み合わせたワークフロー | arch-integration-packages.md |
+| **DB Graceful Degradation** | Cloudflare D1ハンドラー | D1障害時のフォールバック応答 | database-schema.md |
+| **Auth Middleware** | Hono middleware | 認証・認可の一元管理 | security-principles.md |
 
 📖 詳細: [architecture-patterns.md](./architecture-patterns.md)
 
@@ -114,30 +116,28 @@
 
 | ガイドライン | 適用範囲 | 目的 |
 |------------|---------|-----|
-| **Apple HIG** | Electron Desktop | macOSネイティブな操作感 |
 | **WCAG 2.1 AA** | 全UI | アクセシビリティ |
+| **Responsive Design** | apps/web/ | モバイル・デスクトップ対応 |
 
-### Desktop Renderer レイアウト構成（TASK-UI-02）
+### Web App レイアウト構成
 
 | コンポーネント | 役割 | 実装場所 |
 | --- | --- | --- |
-| `AppLayout` | left rail / header / main / mobile bottom nav の統合テンプレート | `apps/desktop/src/renderer/components/organisms/AppLayout/index.tsx` |
-| `GlobalNavStrip` | desktop/tablet の global navigation | `apps/desktop/src/renderer/components/organisms/GlobalNavStrip/index.tsx` |
-| `MobileNavBar` | mobile primary 5 + More 4 の下部ナビ | `apps/desktop/src/renderer/components/organisms/MobileNavBar/index.tsx` |
-| `useNavShortcuts` | global shortcut と戻る導線の統合 | `apps/desktop/src/renderer/hooks/useNavShortcuts.ts` |
+| `AppLayout` | サイドバー / ヘッダー / メイン / モバイルナビの統合テンプレート | `apps/web/src/components/organisms/AppLayout/` |
+| `GlobalNavStrip` | デスクトップ / タブレットのグローバルナビ | `apps/web/src/components/organisms/GlobalNavStrip/` |
+| `MobileNavBar` | モバイル下部ナビゲーション | `apps/web/src/components/organisms/MobileNavBar/` |
+| `useNavShortcuts` | キーボードショートカットと遷移 | `apps/web/src/hooks/useNavShortcuts.ts` |
 
-`App.tsx` は feature flag により legacy `AppDock` と新構成を切り替える。Step 3 までは rollback path を維持する。
+TASK-SKILL-LIFECYCLE-01 以降、`SkillCenterView` は lifecycle の primary entry surface として扱い、create / use / improve の job guide を入口で提示する。
 
-TASK-SKILL-LIFECYCLE-01 以降、`SkillCenterView` は lifecycle の primary entry surface として扱い、create / use / improve の job guide を入口で提示する。shell 側では `normalizeSkillLifecycleView()` により legacy `skill-center` alias を canonical `skillCenter` に寄せてから view 分岐する。
+### Skill Advanced Views
 
-### Skill Advanced Views（TASK-UI-05B — 実装完了）
-
-| ビュー | 責務 | コンポーネント数 | 配置先 |
-|-------|------|--------------|-------|
-| 3A: SkillChainBuilder | スキルチェーンパイプライン構築 | 7 | views/SkillChainBuilder/ |
-| 3B: ScheduleManager | スケジュール管理 | 9 | views/ScheduleManager/ |
-| 3C: DebugPanel | デバッグパネル | 10 | views/DebugPanel/ |
-| 3D: AnalyticsDashboard | 分析ダッシュボード | 7 | views/AnalyticsDashboard/ |
+| ビュー | 責務 | 配置先 |
+|-------|------|-------|
+| SkillChainBuilder | スキルチェーンパイプライン構築 | apps/web/features/skill-chain/ |
+| ScheduleManager | スケジュール管理 | apps/web/features/schedule/ |
+| DebugPanel | デバッグパネル | apps/web/features/debug/ |
+| AnalyticsDashboard | 分析ダッシュボード | apps/web/features/analytics/ |
 
 📖 詳細: [ui-ux-design-principles.md](./ui-ux-design-principles.md)
 
@@ -145,35 +145,35 @@ TASK-SKILL-LIFECYCLE-01 以降、`SkillCenterView` は lifecycle の primary ent
 
 ## セキュリティアーキテクチャ
 
-### Electron セキュリティ設定
+### Cloudflare Workers セキュリティ設定
 
-| 設定 | 値 | 目的 |
-|-----|---|-----|
-| contextIsolation | true | Preloadスクリプトの分離 |
-| nodeIntegration | false | Rendererからのシステムアクセス防止 |
-| sandbox | true | Chromiumサンドボックス有効化 |
-| webSecurity | true | Same-Originポリシー強制 |
+| 設定 | 値 / 方針 | 目的 |
+|-----|----------|-----|
+| CORS Policy | オリジン制限（Pages ドメインのみ許可） | クロスオリジンアクセス制御 |
+| Rate Limiting | Cloudflare Rate Limiting ルール | API 乱用防止 |
+| WAF | Cloudflare WAF（OWASP ルールセット） | 悪意あるリクエストのブロック |
+| HTTPS 強制 | Cloudflare Always Use HTTPS | 通信の暗号化 |
 
 ### セキュリティパターン
 
 | パターン | 説明 | 参照 |
 |---------|-----|-----|
-| **IPC Whitelist** | 許可チャンネルのみ通信可能 | security-electron-ipc.md |
-| **safeInvoke/safeOn** | 安全なIPC呼び出しラッパー | security-electron-ipc.md |
-| **Sender Validation** | IPC送信元の検証 | security-electron-ipc.md |
-| **Path Traversal Prevention** | パス検証（Unicode正規化含む） | security-electron-ipc.md |
-| **CSP** | Content Security Policy | security-electron-ipc.md |
-| **SafeStorage** | OSキーチェーン活用 | security-principles.md |
+| **Zod Validation** | APIリクエスト境界での入力検証 | error-handling.md |
+| **Auth Middleware** | Hono middleware で認証チェックを一元化 | security-principles.md |
+| **Path Traversal Prevention** | パス検証（Unicode正規化含む） | security-principles.md |
+| **CSP** | Content Security Policy（Next.js ヘッダー） | security-principles.md |
+| **Secrets Isolation** | 本番/staging 別シークレット管理 | deployment-secrets-management.md |
+| **Least Privilege** | Cloudflare API Token スコープ最小化 | deployment-secrets-management.md |
 
 ### 認証・認可
 
 | 方式 | 用途 | 参照 |
 |-----|-----|-----|
-| OAuth 2.0 PKCE | Desktop ソーシャルログイン | security-principles.md |
+| OAuth 2.0 PKCE | ソーシャルログイン（Web） | security-principles.md |
 | Supabase Auth | 認証プロバイダー | security-principles.md |
-| カスタムプロトコル | OAuth コールバック受信 | security-principles.md |
+| JWT / Session Cookie | API 認証トークン | security-principles.md |
 
-📖 詳細: [security-principles.md](./security-principles.md), [security-electron-ipc.md](./security-electron-ipc.md)
+📖 詳細: [security-principles.md](./security-principles.md), [deployment-secrets-management.md](./deployment-secrets-management.md)
 
 ---
 
@@ -200,87 +200,50 @@ TASK-SKILL-LIFECYCLE-01 以降、`SkillCenterView` は lifecycle の primary ent
 
 📖 詳細: [arch-state-management.md](./arch-state-management.md)
 
-### Conversation 永続化アーキテクチャ（TASK-FIX-CONVERSATION-IPC-HANDLER-REGISTRATION）
+### Conversation 永続化アーキテクチャ
 
 | 項目 | 内容 |
 |-----|------|
-| データストア | better-sqlite3（WAL mode） |
+| データストア | Cloudflare D1（SQLite, WAL mode） |
 | スキーマ | chat_sessions + chat_messages（4インデックス） |
-| IPC チャンネル | conversation:create/get/list/add-message/update-title/delete/search |
-| 登録パターン | safeRegister + track（Section 13） |
+| API エンドポイント | POST/GET /api/conversations, /api/conversations/:id/messages |
+| 登録パターン | Hono ルート登録（apps/api/src/routes/conversations.ts） |
 | 障害時動作 | Graceful Degradation（ERR_4006 DB_NOT_AVAILABLE） |
 
-📖 詳細: [arch-ipc-persistence.md](./arch-ipc-persistence.md), [database-schema.md](./database-schema.md)
+📖 詳細: [database-schema.md](./database-schema.md)
 
 ---
 
 ## データフローアーキテクチャ
 
-### Electron IPC通信フロー
+### Web/Workers 通信フロー
 
-| ステップ | プロセス | コンポーネント | 処理内容 |
+| ステップ | レイヤー | コンポーネント | 処理内容 |
 |---------|---------|--------------|---------|
-| 1 | Renderer | Components / Stores / Hooks | UIイベント発生 |
-| 2 | Renderer | window.*API (Preload Bridge) | IPC呼び出しをブリッジ |
-| 3 | 境界 | IPC (Whitelist Channel) | ホワイトリストチャンネルで通信 |
-| 4 | Main | IPC Handlers | リクエスト受信・ルーティング |
-| 5 | Main | Services (Facade) | ビジネスロジック実行 |
-| 5 | Main | Repositories (SQLite) | データ永続化 |
-| 5 | Main | Managers (ClaudeCLI) | 外部プロセス管理 |
-| 6 | Main → Renderer | IPC Response | 結果をRendererに返却 |
+| 1 | Browser | Next.js Components / Zustand Stores / Hooks | UIイベント発生 |
+| 2 | Browser | fetch / SWR / React Query | HTTP リクエスト送信 |
+| 3 | 境界 | HTTPS (CORS Policy) | オリジン検証 |
+| 4 | Workers | Hono Router (apps/api/src/routes/) | リクエスト受信・ルーティング |
+| 5 | Workers | Services (Facade) | ビジネスロジック実行 |
+| 5 | Workers | Repositories (D1) | データ永続化 |
+| 5 | Workers | packages/integrations/{service}/ | 外部サービス連携 |
+| 6 | Workers → Browser | HTTP Response (JSON) | 結果をブラウザに返却 |
 
-**セキュリティ**: 全通信はホワイトリストチャンネル経由。Sender検証必須。
+**セキュリティ**: 全通信はHTTPS + CORS Policy経由。Zod による入力バリデーション必須。
 
-### IPC ハンドラー登録一覧
+### Workers API ルート概要
 
-`registerAllIpcHandlers` で一元管理されるハンドラー群。各ハンドラーの登録パターンは引数の依存関係によって分類される。
-
-| ハンドラー登録関数               | 登録パターン                 | チャンネル数 | 参照                     |
-| -------------------------------- | ---------------------------- | ------------ | ------------------------ |
-| registerAuthHandlers             | Pattern 1: mainWindow のみ  | -            | api-ipc-auth.md          |
-| registerSkillHandlers            | Pattern 3: mainWindow + service | -         | api-ipc-agent.md         |
-| registerChatEditHandlers         | Pattern 3: mainWindow + service | 4         | api-ipc-agent.md         |
-| registerSkillCreatorHandlers     | Pattern 3: mainWindow + service + optional runtime service | 16 (15 invoke + 1 progress) | api-ipc-system-core.md |
-| registerSkillFileHandlers        | Pattern 3: mainWindow + service | 6         | api-ipc-agent.md |
-| registerSkillDebugHandlers       | Pattern 3: mainWindow + service | 7 (6 invoke + 1 event) | api-ipc-agent.md |
-| registerSkillDocsHandlers        | Pattern 3: mainWindow + service | 4         | api-ipc-agent.md |
-| registerSkillScheduleHandlers    | Pattern 4: mainWindow + service + store | 5 | api-ipc-agent.md |
-| registerSkillAnalyticsHandlers   | Pattern 3: mainWindow + service | 5 | api-ipc-agent.md |
-| advancedConsoleHandlers | `src/main/ipc/advancedConsoleHandlers.ts` | Advanced Console データ取得（ターミナルログ・コピーコマンド） | - |
-| approvalHandlers | `src/main/ipc/approvalHandlers.ts` | 承認/拒否応答処理（P42 3段バリデーション付き） | - |
-| disclosureHandlers | `src/main/ipc/disclosureHandlers.ts` | AI開示情報取得・dismiss/reopen状態管理 | - |
-
-**Pattern 3 詳細（registerSkillHandlers）**:
-
-- **引数**: `mainWindow: BrowserWindow`, `service: SkillService`
-- **mainWindow用途**: Sender検証（`validateIpcSender`）、権限/進捗イベントの通知経路
-- **service用途**: `SkillService` を中心に `SkillAnalyzer` / `SkillImprover` / `PromptOptimizer` / `SkillForker` / `SkillScheduler` へ処理委譲
-- **対応チャネル**: `skill:list`, `skill:scan`, `skill:getImported`, `skill:import`, `skill:remove`, `skill:create`, `skill:get-detail`, `skill:update`, `skill:execute`, `skill:abort`, `skill:get-status`, `skill:analyze`, `skill:improve`, `skill:optimize`, `skill:optimize:variants`, `skill:optimize:evaluate`, `skill:fork`, `skill:schedule:*`
-- **セキュリティ**: 全 invoke ハンドラーで sender 検証 + P42準拠バリデーション + エラーサニタイズを適用
-- **関連タスク**: TASK-9C, TASK-9E, TASK-9G, TASK-10A-C, TASK-IMP-IPC-LAYER-INTEGRITY-FIX-001
-
-**Pattern 3 詳細（registerSkillFileHandlers）**:
-
-- **引数**: `mainWindow: BrowserWindow`, `service: SkillFileManager`
-- **mainWindow用途**: Sender検証（`validateIpcSender`）
-- **service用途**: SkillFileManagerへのファイル操作委譲
-- **対応チャンネル**: `skill:readFile`, `skill:writeFile`, `skill:createFile`, `skill:deleteFile`, `skill:listBackups`, `skill:restoreBackup`
-- **セキュリティ**: 全ハンドラーでSender検証、引数バリデーション、`isKnownSkillFileError`によるエラーサニタイズ適用
-- **関連タスク**: TASK-9A-B（2026-02-19完了）
-
-**Pattern 3 詳細（registerSkillCreatorHandlers）**:
-
-- **引数**: `mainWindow: BrowserWindow`, `skillCreatorService: SkillCreatorService`, `runtimeSkillCreatorService?: RuntimeSkillCreatorFacade`
-- **mainWindow用途**: Sender検証（`validateIpcSender`）、進捗通知（`webContents.send`）
-- **skillCreatorService用途**: `detect-mode` / `create` / `execute-tasks` / `validate` / `validate-schema` / `improve` / `fork` / `share` / `schedule` / `debug` / `generate-docs` / `stats` を担当
-- **runtimeSkillCreatorService用途**: `skill-creator:plan` / `skill-creator:execute-plan` / `skill-creator:improve-skill` の runtime public bridge を担当し、未注入時も degraded response を返す
-- **対応チャンネル**: `skill-creator:detect-mode`, `skill-creator:create`, `skill-creator:execute-tasks`, `skill-creator:validate`, `skill-creator:validate-schema`, `skill-creator:improve`, `skill-creator:fork`, `skill-creator:share`, `skill-creator:schedule`, `skill-creator:debug`, `skill-creator:generate-docs`, `skill-creator:stats`, `skill-creator:plan`, `skill-creator:execute-plan`, `skill-creator:improve-skill`, `skill-creator:progress`
-- **セキュリティ**: 標準 invoke handler と runtime helper の全経路で Sender検証、P42 準拠の blank 判定、エラーサニタイズを適用
-- **関連タスク**: TASK-9B-H-SKILL-CREATOR-IPC（2026-02-12完了）、UT-IMP-RUNTIME-SKILL-CREATOR-IPC-WIRING-001（2026-03-21完了）
+| ルートグループ | パス | 責務 |
+|-------------|------|-----|
+| auth | /api/auth/* | 認証・認可（OAuth, JWT） |
+| skills | /api/skills/* | スキル管理・実行 |
+| skill-creator | /api/skill-creator/* | スキル作成・ワークフロー |
+| conversations | /api/conversations/* | 会話セッション管理 |
+| integrations | /api/integrations/* | 外部サービス連携ブリッジ |
 
 ### Skill Creator Runtime Orchestration Foundation
 
-`registerSkillCreatorHandlers` が公開する runtime bridge の背後では、Skill Creator runtime を次の 3 層で分ける。
+Skill Creator runtime を次の 3 層で分ける。
 
 | 層 | コンポーネント | 役割 |
 | --- | --- | --- |
@@ -288,29 +251,11 @@ TASK-SKILL-LIFECYCLE-01 以降、`SkillCenterView` は lifecycle の primary ent
 | workflow foundation | `ManifestLoader`, `WorkflowManifest*` | `workflow-manifest.json` の read / validate / normalize / cache と shared contract を担う |
 | workflow state owner | `SkillCreatorWorkflowEngine` | `currentPhase` / `awaitingUserInput` / `verifyResult` / phase artifacts / `resumeTokenEnvelope` を保持し、source provenance snapshot を route snapshot と同一 envelope に固定する |
 
-Task08 session persistence/resume contract では、この engine state を永続化の正本入力として扱う。`resumeTokenEnvelope` 自体は runtime snapshot、persisted checkpoint は別契約とし、checkpoint は phase boundary 単位、resume public surface を追加する場合は `skill-creator:*` namespace を使って `agent:resumeSession` を流用しない。
+Task08 session persistence/resume contract では、この engine state を永続化の正本入力として扱う。`resumeTokenEnvelope` 自体は runtime snapshot、persisted checkpoint は別契約とし、checkpoint は phase boundary 単位。
 
-この構成では、`RuntimeSkillCreatorFacade` は state owner ではなく public bridge に留まり、`plan()` の review state 記録、`execute()` の `terminal_handoff` 早期 return、`integrated_api` 完了時の verify 遷移記録を engine へ委譲する。`success: false` と executor reject は verify pending に進めず review へ戻し、`verification_review` と失敗 snapshot を engine が保持する。`ManifestLoader` も route authority へ昇格しない。owner 分離と downstream handoff は Task02 workflow 仕様書を正本とする。
+`RuntimeSkillCreatorFacade` は state owner ではなく public bridge に留まり、`plan()` の review state 記録、`execute()` の `terminal_handoff` 早期 return、`integrated_api` 完了時の verify 遷移記録を engine へ委譲する。`success: false` と executor reject は verify pending に進めず review へ戻し、`verification_review` と失敗 snapshot を engine が保持する。
 
-TASK-FIX-EXECUTE-PLAN-FF-001 以降、`skill-creator:execute-plan` は `{ accepted: true, planId }` の ack を返す fire-and-forget 入口として扱い、実行完了通知は `SKILL_CREATOR_WORKFLOW_STATE_CHANGED` snapshot relay に分離する。これにより `RuntimeSkillCreatorFacade` の public bridge は受付責務のみを持ち、Engine は内部 progress hook を保持する。
-
-**Pattern 3 詳細（registerSkillDebugHandlers）**:
-
-- **引数**: `mainWindow: BrowserWindow`
-- **mainWindow用途**: Sender検証（`validateIpcSender`）、イベント通知（`webContents.send`）
-- **service用途**: `SkillDebugger` を内部生成してセッション管理・式評価を委譲
-- **対応チャンネル**: `skill:debug:start`, `skill:debug:command`, `skill:debug:breakpoint:add`, `skill:debug:breakpoint:remove`, `skill:debug:inspect`, `skill:debug:evaluate`, `skill:debug:event`
-- **セキュリティ**: 全 invoke ハンドラーでSender検証 + P42準拠入力検証。`evaluate` は vm サンドボックス + タイムアウト制限を適用
-- **関連タスク**: TASK-9H（2026-02-27完了）
-
-**Pattern 3 詳細（registerSkillDocsHandlers）**:
-
-- **引数**: `mainWindow: BrowserWindow`, `skillDocGenerator: SkillDocGenerator`
-- **mainWindow用途**: Sender検証（`validateIpcSender`）
-- **service用途**: SkillDocGenerator へのドキュメント生成処理委譲
-- **対応チャンネル**: `skill:docs:generate`, `skill:docs:preview`, `skill:docs:export`, `skill:docs:templates`
-- **セキュリティ**: 全ハンドラーで sender 検証、P42準拠3段バリデーション、`export` のパストラバーサル検証、エラー正規化適用
-- **関連タスク**: TASK-9I（2026-02-28完了）
+`skill-creator:execute-plan` は `{ accepted: true, planId }` の ack を返す fire-and-forget 入口として扱い、実行完了通知は `SKILL_CREATOR_WORKFLOW_STATE_CHANGED` snapshot relay に分離する。
 
 📖 詳細: [architecture-patterns.md](./architecture-patterns.md)
 
@@ -322,59 +267,54 @@ TASK-FIX-EXECUTE-PLAN-FF-001 以降、`skill-creator:execute-plan` は `{ accept
 
 | ディレクトリ | 役割 |
 |------------|-----|
-| apps/web/ | Next.js Webアプリ |
+| apps/web/ | Next.js Webアプリ（Cloudflare Pages） |
 | apps/web/app/ | App Router |
-| apps/web/features/ | 機能モジュール |
-| apps/desktop/ | Electron デスクトップアプリ |
-| apps/desktop/src/main/ | Main Process |
-| apps/desktop/src/renderer/ | Renderer Process |
-| apps/desktop/src/preload/ | Preload Script |
+| apps/web/features/ | ワークフロー機能モジュール |
+| apps/api/ | Cloudflare Workers バックエンド（Hono） |
+| apps/api/src/routes/ | API ルート定義 |
+| apps/api/src/services/ | Facade サービス層 |
+| apps/api/src/adapters/ | LLM / 外部サービス Adapter |
+| apps/api/wrangler.toml | Workers 環境設定 |
 | packages/shared/ | 共有パッケージ |
 | packages/shared/core/ | ドメイン層（依存ゼロ） |
 | packages/shared/src/types/ | 型定義（依存ゼロ） |
 | packages/shared/src/services/ | ドメインサービス |
 | packages/shared/infrastructure/ | インフラ層 |
 | packages/shared/ui/ | UIコンポーネント |
+| packages/integrations/ | 外部サービス連携パッケージ群 |
+| packages/integrations/{service}/ | 個別サービス連携ツール |
 | docs/ | ドキュメント |
 | .claude/skills/ | Claude Codeスキル |
 
-### Desktop Main Process構造
+### Web App 構造
 
 | ディレクトリ | 役割 |
 |------------|-----|
-| apps/desktop/src/main/services/ | Facadeサービス |
-| apps/desktop/src/main/services/environment/ | 環境サービス |
-| apps/desktop/src/main/services/skill/ | スキルサービス |
-| apps/desktop/src/main/services/skill/ | スキル作成サービス（SkillCreatorService含む） |
-| apps/desktop/src/main/adapters/llm/ | LLM Adapter（Anthropic/OpenAI/Google/xAI） |
-| apps/desktop/src/main/adapters/handoff/ | Handoff Adapter（HandoffSource → HandoffGuidance 変換。Discriminated Union: chat-edit/agent/skill/bundle） |
-| apps/desktop/src/main/ipc/ | IPCハンドラ |
-| apps/desktop/src/main/infrastructure/ | インフラ（DB、セキュリティ） |
-| apps/desktop/src/main/infrastructure/db/ | better-sqlite3 |
-| apps/desktop/src/main/infrastructure/security/ | IPC検証、CSP |
-| apps/desktop/src/main/menu.ts | アプリケーションメニュー（ズーム制御含む） |
-| apps/desktop/src/main/index.ts | エントリポイント（関連未タスク: [UT-IMP-MAIN-PROCESS-MODULE-EXTRACTION-GUARD-001](../../docs/30-workflows/completed-tasks/TASK-FIX-ELECTRON-APP-MENU-ZOOM-001/unassigned-task/task-imp-main-process-module-extraction-guard-001.md) — トップレベル副作用モジュール分離ガード） |
+| apps/web/app/ | Next.js App Router（ページルーティング） |
+| apps/web/src/components/ | UIコンポーネント（Atomic Design） |
+| apps/web/src/components/atoms/ | 最小単位コンポーネント |
+| apps/web/src/components/molecules/ | 機能単位コンポーネント |
+| apps/web/src/components/organisms/ | セクションコンポーネント |
+| apps/web/features/ | 機能モジュール（ワークフロー別） |
+| apps/web/features/{feature}/components/ | 機能固有コンポーネント |
+| apps/web/features/{feature}/hooks/ | 機能固有フック |
+| apps/web/features/{feature}/store/ | 機能固有 Zustand Slice |
+| apps/web/src/store/ | グローバル Store |
+| apps/web/src/store/slices/ | Zustand Slice |
+| apps/web/src/hooks/ | 共通フック |
 
-### Desktop Renderer Process構造
+### Workers API 構造
 
 | ディレクトリ | 役割 |
 |------------|-----|
-| apps/desktop/src/renderer/components/ | UIコンポーネント |
-| apps/desktop/src/renderer/components/atoms/ | 最小単位 |
-| apps/desktop/src/renderer/components/molecules/ | 機能単位 |
-| apps/desktop/src/renderer/components/organisms/ | セクション |
-| apps/desktop/src/renderer/features/ | 機能モジュール |
-| apps/desktop/src/renderer/features/{feature}/components/ | 機能固有コンポーネント |
-| apps/desktop/src/renderer/features/{feature}/hooks/ | 機能固有フック |
-| apps/desktop/src/renderer/features/{feature}/store/ | 機能固有Slice |
-| apps/desktop/src/renderer/store/ | グローバルStore |
-| apps/desktop/src/renderer/store/slices/ | Zustand Slice |
-| apps/desktop/src/renderer/hooks/ | 共通フック |
-| apps/desktop/src/renderer/views/ | ビュー（ページ相当） |
-| apps/desktop/src/renderer/views/SkillChainBuilder/ | スキルチェーンビルダー（3A） |
-| apps/desktop/src/renderer/views/ScheduleManager/ | スケジュール管理（3B） |
-| apps/desktop/src/renderer/views/DebugPanel/ | デバッグパネル（3C） |
-| apps/desktop/src/renderer/views/AnalyticsDashboard/ | 分析ダッシュボード（3D） |
+| apps/api/src/index.ts | Workers エントリポイント |
+| apps/api/src/routes/ | Hono ルートハンドラー |
+| apps/api/src/services/ | Facade サービス（SkillService 等） |
+| apps/api/src/services/skill/ | スキル管理サービス |
+| apps/api/src/adapters/llm/ | LLM Adapter（Anthropic/OpenAI/Google） |
+| apps/api/src/adapters/handoff/ | Handoff Adapter |
+| apps/api/src/middleware/ | 認証・バリデーション Middleware |
+| apps/api/src/db/ | Cloudflare D1 Repository 層 |
 
 📖 詳細: [directory-structure.md](./directory-structure.md)
 
@@ -386,11 +326,11 @@ TASK-FIX-EXECUTE-PLAN-FF-001 以降、`skill-creator:execute-plan` は `{ accept
 
 | カテゴリ | 配置場所 | 用途 |
 |---------|---------|-----|
-| 共通型 | `packages/shared/src/types/` | Web/Desktop共通 |
+| 共通型 | `packages/shared/src/types/` | Web/Workers共通 |
 | RAG型 | `packages/shared/src/types/rag/` | RAG機能 |
 | スキル型 | `packages/shared/src/types/skill.ts` | スキル管理 |
 | Agent SDK型 | `packages/shared/src/types/agent.ts` | Agent SDK連携 |
-| IPC型 | `apps/desktop/src/renderer/types/` | IPC通信 |
+| API型 | `apps/api/src/types/` | Workers API リクエスト/レスポンス型 |
 
 ### 型定義原則
 
@@ -398,7 +338,7 @@ TASK-FIX-EXECUTE-PLAN-FF-001 以降、`skill-creator:execute-plan` は `{ accept
 |-----|-----|
 | **Zod First** | ランタイムバリデーション付き型定義 |
 | **Infer Type** | `z.infer<typeof schema>` で型推論 |
-| **Shared Types** | Web/Desktop共通型は shared に配置 |
+| **Shared Types** | Web/Workers共通型は shared に配置 |
 | **Result Pattern** | 全APIは `Result<T>` 型で統一 |
 
 ### 主要型定義ファイル

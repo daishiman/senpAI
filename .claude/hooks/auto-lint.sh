@@ -2,7 +2,7 @@
 # Claude Code 自動LintHook
 # イベント: PostToolUse (Edit|Write)
 # 目的: ファイル編集後に自動でESLintを実行（自動修正）
-# 対象: TypeScript, Next.js, Electron プロジェクト
+# 対象: TypeScript, Next.js, Cloudflare Workers プロジェクト
 #
 # 環境変数:
 #   CLAUDE_SKIP_LINT=1        - このフックをスキップ

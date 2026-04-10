@@ -15,6 +15,7 @@
  */
 
 import { readdir, readFile, writeFile } from "fs/promises";
+import { existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -234,6 +235,12 @@ node scripts/list-specs.js --topics
 
     for (const file of files) {
       const filePath = join(REFS_DIR, file);
+
+      // 削除済みファイルへの参照を除去（dead link check）
+      if (!existsSync(filePath)) {
+        continue;
+      }
+
       const headings = await extractHeadings(filePath);
 
       md += `### references/${file}\n\n`;
@@ -257,6 +264,10 @@ node scripts/list-specs.js --topics
     if (!topicOrder.includes(topic) && files.length > 0) {
       md += `## ${topic}\n\n`;
       for (const file of files) {
+        // 削除済みファイルへの参照を除去（dead link check）
+        if (!existsSync(join(REFS_DIR, file))) {
+          continue;
+        }
         md += `### references/${file}\n\n`;
       }
       md += "---\n\n";
