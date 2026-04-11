@@ -169,4 +169,4 @@ wrangler pages deployment rollback <deployment-id> --project-name senpai-web
 
 | 日付 | バージョン | 変更内容 |
 | ---- | ---------- | -------- |
-| 2026-04-09 | 2.0.0 | Railway・Electron 削除、Cloudflare（Pages/Workers/D1/R2/KV）へ移行 |
+| 2026-04-09 | 2.0.0 | 旧デプロイ基盤・Electron 削除、Cloudflare（Pages/Workers/D1/R2/KV）へ移行 |

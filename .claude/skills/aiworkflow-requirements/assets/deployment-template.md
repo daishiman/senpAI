@@ -9,8 +9,8 @@
 
 {このデプロイ環境が何を提供するか、対象アプリケーションを1-2文で説明}
 
-**対象**: {apps/web, apps/desktop, infrastructure}
-**環境**: {Railway / Vercel / Electron / GitHub Actions}
+**対象**: {apps/web, apps/api, infrastructure}
+**環境**: {Cloudflare Pages / Cloudflare Workers / GitHub Actions}
 
 ---
 
@@ -140,8 +140,8 @@
 
 | サービス | 無料枠    | 超過時の対応     |
 | -------- | --------- | ---------------- |
-| Railway  | 5$/月     | スケールアップ   |
-| Vercel   | 100GB帯域 | キャッシュ最適化 |
+| Cloudflare Pages   | 無料枠中心 | 静的配信・SSR |
+| Cloudflare Workers | 無料枠中心 | API・バックエンド |
 
 ---
 

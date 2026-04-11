@@ -73,7 +73,7 @@ const TOPIC_KEYWORDS = {
     "Task",
   ],
   ワークフロー: ["タスク分解", "Git Worktree", "PR", "CI/CD"],
-  その他: ["デプロイ", "Railway", "環境変数", "Discord", "プラグイン"],
+  その他: ["デプロイ", "Cloudflare", "環境変数", "Discord", "プラグイン"],
 };
 
 // 概要・品質カテゴリのファイル（prefixなし）

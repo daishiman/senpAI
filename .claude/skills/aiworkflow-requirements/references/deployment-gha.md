@@ -249,4 +249,4 @@
 
 | 日付 | バージョン | 変更内容 |
 | ---- | ---------- | -------- |
-| 2026-04-09 | 2.0.0 | Railway・Electron E2E 削除、Cloudflare Pages デプロイへ移行 |
+| 2026-04-09 | 2.0.0 | 旧デプロイ基盤・Electron E2E 削除、Cloudflare Pages デプロイへ移行 |

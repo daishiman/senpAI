@@ -281,4 +281,4 @@ wrangler pages deployment rollback <deployment-id> --project-name senpai-web
 
 | 日付 | バージョン | 変更内容 |
 | ---- | ---------- | -------- |
-| 2026-04-09 | 1.0.0 | 初版作成（Railway → Cloudflare 移行） |
+| 2026-04-09 | 1.0.0 | 初版作成（Cloudflare 移行） |

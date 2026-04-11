@@ -168,7 +168,7 @@ const TEMPLATE_MAPPINGS = {
     },
     // デプロイ関連
     {
-      keywords: ["デプロイ", "CI/CD", "GitHub Actions", "Railway", "リリース"],
+      keywords: ["デプロイ", "CI/CD", "GitHub Actions", "Cloudflare", "リリース"],
       template: "deployment-template.md",
       description: "デプロイ仕様",
     },

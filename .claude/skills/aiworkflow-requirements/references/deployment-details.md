@@ -123,8 +123,9 @@
 
 | Secret名              | 用途                          | 必須 |
 | --------------------- | ----------------------------- | ---- |
-| `RAILWAY_TOKEN`       | Railway CLIデプロイ認証       | Yes  |
-| `RAILWAY_DOMAIN`      | バックエンドヘルスチェックURL | Yes  |
+| `CLOUDFLARE_API_TOKEN` | Cloudflareデプロイ認証       | Yes  |
+| `CLOUDFLARE_ACCOUNT_ID` | CloudflareアカウントID      | Yes  |
+| `CLOUDFLARE_WORKERS_DOMAIN` | バックエンドヘルスチェックURL | Yes  |
 | `DISCORD_WEBHOOK_URL` | Discord通知用WebhookURL       | No   |
 
 ### セキュリティ要件
@@ -136,4 +137,3 @@
 | マスク処理 | ログに出力されないようマスク処理   |
 
 ---
-

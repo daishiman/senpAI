@@ -27,7 +27,7 @@
 **メリット**:
 
 - コード再利用: 1箇所の変更が両プラットフォームに反映
-- 独立デプロイ: Web（Railway）とDesktop（GitHub Releases）を別々に管理
+- 独立デプロイ: Web（Cloudflare Pages）とAPI（Cloudflare Workers）を別々に管理
 
 ### 4つの基本原則
 
@@ -181,7 +181,7 @@
 | rag/branded.ts       | RAG Branded Type定義（ID型）            |
 | rag/interfaces.ts    | RAG共通インターフェース                 |
 | rag/errors.ts        | RAGエラー型                             |
-| rag/result.ts        | Result型（Railway Oriented Programming) |
+| rag/result.ts        | Result型（Resultベースの明示的エラーハンドリング） |
 | rag/file/            | RAGファイル・変換ドメイン型             |
 | rag/file/types.ts    | 型定義・定数・インターフェース          |
 | rag/file/schemas.ts  | Zodスキーマ（ランタイムバリデーション） |
@@ -410,8 +410,7 @@
 | ファイル            | 役割                                |
 | ------------------- | ----------------------------------- |
 | ci.yml              | CI（テスト、lint、型チェック）      |
-| deploy-web.yml      | Webデプロイ（Railway）              |
-| release-desktop.yml | Electronリリース（GitHub Releases） |
+| backend-ci.yml      | APIデプロイ（Cloudflare Workers）  |
+| web-cd.yml          | Webデプロイ（Cloudflare Pages）    |
 
 ---
-
