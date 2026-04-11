@@ -46,6 +46,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: hashFiles('package.json') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,6 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-shared]
     timeout-minutes: 10
+    if: hashFiles('package.json') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,6 +108,7 @@ jobs:
     name: Build Shared
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: hashFiles('package.json') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -140,6 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-shared]
     timeout-minutes: 10
+    if: hashFiles('package.json') != ''
     env:
       NODE_OPTIONS: --max-old-space-size=4096
     steps:
@@ -174,6 +178,7 @@ jobs:
     name: Module Sync Check
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: hashFiles('package.json') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -200,6 +205,7 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: hashFiles('package.json') != ''
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -231,7 +237,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [test-shared]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && hashFiles('package.json') != ''
     steps:
       - name: Download web coverage artifacts
         uses: actions/download-artifact@v4
@@ -253,6 +259,7 @@ jobs:
     name: Build Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: hashFiles('package.json') != ''
     needs:
       [
         lint,
