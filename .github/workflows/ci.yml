@@ -42,11 +42,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-app:
+    name: Check App Ready
+    runs-on: ubuntu-latest
+    outputs:
+      app_ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          if [ -f "package.json" ]; then
+            echo "ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "ready=false" >> $GITHUB_OUTPUT
+            echo "⚠️ package.json が見つかりません。CIをスキップします。"
+          fi
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: [check-app]
     timeout-minutes: 10
-    if: hashFiles('package.json') != ''
+    if: needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,9 +89,9 @@ jobs:
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
-    needs: [build-shared]
+    needs: [check-app, build-shared]
     timeout-minutes: 10
-    if: hashFiles('package.json') != ''
+    if: needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -107,8 +124,9 @@ jobs:
   build-shared:
     name: Build Shared
     runs-on: ubuntu-latest
+    needs: [check-app]
     timeout-minutes: 5
-    if: hashFiles('package.json') != ''
+    if: needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -141,9 +159,9 @@ jobs:
   test-shared:
     name: Test (shared)
     runs-on: ubuntu-latest
-    needs: [build-shared]
+    needs: [check-app, build-shared]
     timeout-minutes: 10
-    if: hashFiles('package.json') != ''
+    if: needs.check-app.outputs.app_ready == 'true'
     env:
       NODE_OPTIONS: --max-old-space-size=4096
     steps:
@@ -177,8 +195,9 @@ jobs:
   check-module-sync:
     name: Module Sync Check
     runs-on: ubuntu-latest
+    needs: [check-app]
     timeout-minutes: 5
-    if: hashFiles('package.json') != ''
+    if: needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -204,8 +223,9 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
+    needs: [check-app]
     timeout-minutes: 5
-    if: hashFiles('package.json') != ''
+    if: needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -236,8 +256,8 @@ jobs:
     name: Upload Coverage
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [test-shared]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && hashFiles('package.json') != ''
+    needs: [check-app, test-shared]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Download web coverage artifacts
         uses: actions/download-artifact@v4
@@ -259,15 +279,16 @@ jobs:
     name: Build Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: hashFiles('package.json') != ''
     needs:
       [
+        check-app,
         lint,
         typecheck,
         test-shared,
         build-shared,
         check-module-sync,
       ]
+    if: needs.check-app.outputs.app_ready == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
