@@ -21,7 +21,7 @@
 | 原則 | 説明 | 具体例 |
 | ---- | ---- | ------ |
 | 学習コストの最小化 | 広く使われ、ドキュメントが充実した技術を優先 | React, Next.js, TypeScript |
-| 無料枠の最大活用 | 無料tier内で運用可能なサービスを選択 | Vercel, Turso, Railway |
+| 無料枠の最大活用 | 無料tier内で運用可能なサービスを選択 | Cloudflare, Turso |
 | 型安全性の徹底 | 静的型検査と実行時検証を組み合わせる | TypeScript strict mode + Zod |
 
 ### アーキテクチャ概要
@@ -46,7 +46,7 @@
 | サービス | 用途 | 無料枠 |
 | -------- | ---- | ------ |
 | Turso | 分散SQLite | 9GB、500Mリクエスト/月 |
-| Railway | ホスティング | 従量課金 |
+| Cloudflare Pages / Workers | ホスティング | 無料枠中心 |
 | AI Provider | LLM統合 | OpenAI / Anthropic / Google / xAI |
 
 ---
@@ -273,7 +273,7 @@ Zustandを採用した理由は、シンプルなAPI、TypeScript完全対応、
 | サービス          | 無料枠                   | 個人開発での充足度 |
 | ----------------- | ------------------------ | ------------------ |
 | **Turso**         | 9GB、500Mリクエスト/月   | 十分               |
-| **Railway**       | $5クレジット/月          | 小規模なら可       |
+| **Cloudflare Pages / Workers** | 無料枠中心               | Web/APIの個人開発に十分 |
 | **Cloudflare R2** | 10GB、100万リクエスト/月 | ファイル保存に最適 |
 | **OpenAI**        | $5 (新規)                | 開発テスト用       |
 | **Google AI**     | 60リクエスト/分          | 開発テスト用       |
@@ -411,4 +411,3 @@ AI呼び出しのコストを最適化するため、環境と用途に応じて
 | 5 | Turso | 成長中 | Discord |
 
 ---
-

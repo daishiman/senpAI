@@ -1,6 +1,6 @@
 # トピックマップ
 
-> 自動生成: 2026-04-09
+> 自動生成: 2026-04-10
 > 生成コマンド: node scripts/generate-index.js
 
 このファイルはreferences/配下の仕様をトピック別に整理したインデックスです。
@@ -34,18 +34,17 @@ node scripts/list-specs.js --topics
 | システム用語 | L8 |
 | アーキテクチャ用語 | L18 |
 | パッケージ/ディレクトリ | L29 |
-| インターフェース用語 | L39 |
-| UI/デザイン用語 | L50 |
+| インターフェース用語 | L40 |
+| UI/デザイン用語 | L51 |
 | テスト用語 | L65 |
-| Electron 用語 | L76 |
-| データベース用語 | L90 |
-| 認証・認可用語 | L109 |
-| エラーハンドリング用語 | L120 |
-| インフラ用語 | L132 |
-| AI 用語 | L148 |
-| RAG 用語 | L158 |
-| 参考資料 (References) | L250 |
-| 関連ドキュメント | L303 |
+| データベース用語 | L76 |
+| 認証・認可用語 | L95 |
+| エラーハンドリング用語 | L106 |
+| インフラ用語 | L118 |
+| AI 用語 | L137 |
+| RAG 用語 | L147 |
+| 参考資料 (References) | L239 |
+| 関連ドキュメント | L293 |
 
 ### references/master-design.md
 
@@ -62,12 +61,12 @@ node scripts/list-specs.js --topics
 | セクション | 行 |
 |------------|----|
 | システムの目的 | L8 |
-| 設計の核心概念 | L36 |
+| 設計の核心概念 | L35 |
 | 対象ユーザー | L69 |
 | スコープ定義 | L80 |
-| アーキテクチャ原則 | L120 |
-| 成功基準 | L152 |
-| 関連ドキュメント | L173 |
+| アーキテクチャ原則 | L111 |
+| 成功基準 | L143 |
+| 関連ドキュメント | L164 |
 
 ### references/quality-requirements.md
 
@@ -217,45 +216,6 @@ node scripts/list-specs.js --topics
 |------------|----|
 | AgentView Enhancement 実装パターン（TASK-UI-03 2026-03-07実装） | L6 |
 
-### references/architecture-implementation-patterns-reference-ipc-contract-audits.md
-
-| セクション | 行 |
-|------------|----|
-| IPC データフロー型ギャップパターン（UT-IPC-DATA-FLOW-TYPE-GAPS-001 2026-02-24実装） | L6 |
-| 続き | L261 |
-
-### references/architecture-implementation-patterns-reference-ipc-drift-detection.md
-
-| セクション | 行 |
-|------------|----|
-| 概要 | L6 |
-| スクリプト | L10 |
-| 検出ルール | L14 |
-| 実行方法 | L23 |
-| 抽出パターン | L31 |
-| 既知の制約 | L37 |
-| 教訓 | L43 |
-| テスト戦略 | L49 |
-| 実行サマリー（2026-03-21 実測） | L82 |
-| 関連タスク | L93 |
-
-### references/architecture-implementation-patterns-reference-ipc-fallback-validation.md
-
-| セクション | 行 |
-|------------|----|
-| AgentView Enhancement 実装パターン（TASK-UI-03 2026-03-07実装） | L6 |
-
-### references/architecture-implementation-patterns-reference-ipc-naming.md
-
-| セクション | 行 |
-|------------|----|
-| IPCチャネル命名監査の運用パターン（UT-IPC-CHANNEL-NAMING-AUDIT-001 2026-02-25実施） | L4 |
-| 未タスク監査スコープ分離パターン（UT-IMP-UNASSIGNED-AUDIT-SCOPE-CONTROL-001） | L45 |
-| 共有型インポート標準パターン（TASK-10A-D） | L95 |
-| IPC レスポンス Wrapper パターン（UT-06-003 2026-03-17実装） | L136 |
-| Dynamic Import 型伝播パターン（UT-SC-05-APPLY-IMPROVEMENT-UI 2026-03-24実装） | L217 |
-| S-IPC-AUTO: IPC契約ドリフト自動検出パターン（UT-TASK06-007） | L261 |
-
 ### references/architecture-implementation-patterns-reference.md
 
 | セクション | 行 |
@@ -283,9 +243,9 @@ node scripts/list-specs.js --topics
 | セクション | 行 |
 |------------|----|
 | モノレポアーキテクチャ | L8 |
-| 型エクスポートパターン | L214 |
-| 完了タスク | L284 |
-| 変更履歴 | L316 |
+| 型エクスポートパターン | L212 |
+| 完了タスク | L282 |
+| 変更履歴 | L314 |
 
 ### references/architecture-overview-core.md
 
@@ -294,13 +254,13 @@ node scripts/list-specs.js --topics
 | 概要 | L6 |
 | 設計思想 | L12 |
 | レイヤー構成 | L39 |
-| デザインパターン | L69 |
-| UI/UXアーキテクチャ | L101 |
+| デザインパターン | L71 |
+| UI/UXアーキテクチャ | L103 |
 | セキュリティアーキテクチャ | L146 |
 | 状態管理アーキテクチャ | L180 |
 | データフローアーキテクチャ | L217 |
-| ディレクトリ構造 | L319 |
-| データ構造（型システム） | L383 |
+| ディレクトリ構造 | L264 |
+| データ構造（型システム） | L323 |
 
 ### references/architecture-overview-details.md
 
@@ -941,147 +901,6 @@ node scripts/list-specs.js --topics
 | 各APIの概要 | L21 |
 | 関連ドキュメント | L49 |
 
-### references/api-ipc-agent-advanced.md
-
-| セクション | 行 |
-|------------|----|
-| スキル分析・統計 IPC チャネル（TASK-9J） | L6 |
-
-### references/api-ipc-agent-core.md
-
-| セクション | 行 |
-|------------|----|
-| Agent Dashboard IPC チャネル | L6 |
-| Workspace Chat Edit IPC チャネル | L74 |
-| Skill Creator IPC チャネル | L256 |
-| SDK メッセージ出力型統合 | L344 |
-| SDK メッセージ出力型統合 | L358 |
-| `skill:execute` IPC 契約（TASK-FIX-SKILL-AUTH-PREFLIGHT-GUARD-001） | L402 |
-| スキルファイル操作 IPC チャネル | L436 |
-| スキル安全性評価・ファイルツリー IPC チャネル | L445 |
-| スキル公開・配布 IPC 契約（TASK-SKILL-LIFECYCLE-08 / spec_created） | L456 |
-
-### references/api-ipc-agent-details.md
-
-| セクション | 行 |
-|------------|----|
-| スキル共有 IPC チャネル（TASK-9F） | L6 |
-| スキルフォーク IPC チャネル（TASK-9E） | L114 |
-| スキルチェーン IPC チャネル（TASK-9D） | L156 |
-| スキルスケジュール IPC チャネル（TASK-9G） | L223 |
-| スキルデバッグ IPC チャネル（TASK-9H） | L272 |
-| スキルドキュメント生成 IPC チャネル（TASK-9I） | L321 |
-
-### references/api-ipc-agent-fileops.md
-
-| セクション | 行 |
-|------------|----|
-| スキルファイル操作 IPC チャネル（TASK-9A-B） | L6 |
-
-### references/api-ipc-agent-history.md
-
-| セクション | 行 |
-|------------|----|
-| 完了タスク | L6 |
-| 実装パターン参照 | L78 |
-| 関連ドキュメント | L90 |
-| 完了タスク | L102 |
-| 変更履歴 | L141 |
-
-### references/api-ipc-agent-safety.md
-
-| セクション | 行 |
-|------------|----|
-| スキル安全性評価 IPC チャネル（UT-06-003） | L8 |
-| スキルファイルツリー取得 IPC チャネル（TASK-UI-05A） | L72 |
-| 変更履歴 | L103 |
-
-### references/api-ipc-agent.md
-
-| セクション | 行 |
-|------------|----|
-| 概要 | L3 |
-| 仕様書インデックス | L6 |
-| 利用順序 | L14 |
-| 補助参照の境界 | L19 |
-| 関連ドキュメント | L24 |
-
-### references/api-ipc-auth.md
-
-| セクション | 行 |
-|------------|----|
-| 認証 IPC チャネル | L10 |
-| プロフィール IPC チャネル | L90 |
-| アバター IPC チャネル | L106 |
-| Supabase 未設定時の fallback 契約 | L114 |
-| イベントチャネル（Main → Renderer） | L134 |
-| 型定義 | L161 |
-| 認証状態管理 | L219 |
-| IPCセキュリティ実装 | L250 |
-| セッション自動リフレッシュ（TASK-AUTH-SESSION-REFRESH-001） | L277 |
-| 関連ドキュメント | L331 |
-| 完了タスク | L341 |
-| 変更履歴 | L407 |
-
-### references/api-ipc-sdk-type-contracts.md
-
-| セクション | 行 |
-|------------|----|
-| SDK メッセージ出力型統合（UT-RT-06 / UT-RT-06-SKILL-STREAM-SKCE-TYPE-UNIFICATION-001） | L6 |
-
-### references/api-ipc-system-core.md
-
-| セクション | 行 |
-|------------|----|
-| AI/チャット IPC チャネル | L6 |
-| Skill Creator Workflow Interaction Bridge（TASK-SDK-04） | L76 |
-| Slide IPC API（スライド同期） | L120 |
-| Workspace File Watch IPC API（TASK-UI-04A） | L201 |
-| Conversation IPC API（会話履歴永続化） | L245 |
-| Electron IPC API設計 | L281 |
-| 分割ファイル一覧 | L426 |
-
-### references/api-ipc-system-details.md
-
-| セクション | 行 |
-|------------|----|
-| エンティティ抽出サービス (NER) | L6 |
-
-### references/api-ipc-system-history.md
-
-| セクション | 行 |
-|------------|----|
-| 関連ドキュメント | L6 |
-| 完了タスク | L15 |
-| 変更履歴 | L219 |
-
-### references/api-ipc-system-skill-creator-part2.md
-
-| セクション | 行 |
-|------------|----|
-| ChatPanel IPC チャネル契約（TASK-IMP-CHATPANEL-REAL-AI-CHAT-001） | L4 |
-| Advanced Console Safety Governance（TASK-IMP-ADVANCED-CONSOLE-SAFETY-GOVERNANCE-001） | L35 |
-| AIプロバイダーAPI連携 | L73 |
-| Skill Creator - execute() ファイル永続化統合（TASK-P0-05） | L106 |
-| Skill Creator External API Support（TASK-SDK-SC-03） | L153 |
-| IPC Handler Lifecycle Management（TASK-FIX-IPC-SKILL-NAME-001 追記: 2026-04-06） | L234 |
-| TASK-SC-13-VERIFY-CHANNEL-IMPLEMENTATION（2026-04-08） | L270 |
-
-### references/api-ipc-system-skill-creator.md
-
-| セクション | 行 |
-|------------|----|
-| Skill Creator Runtime Public IPC（UT-IMP-RUNTIME-SKILL-CREATOR-IPC-WIRING-001） | L4 |
-
-### references/api-ipc-system.md
-
-| セクション | 行 |
-|------------|----|
-| 概要 | L3 |
-| 仕様書インデックス | L6 |
-| 利用順序 | L13 |
-| 関連ドキュメント | L18 |
-
 ---
 
 ## データベース
@@ -1350,10 +1169,10 @@ node scripts/list-specs.js --topics
 | セクション | 行 |
 |------------|----|
 | 概要 | L6 |
-| Skill Runtime API Key Panel（TASK-RT-04） | L66 |
-| LLM Adapter Error Banner（TASK-RT-01） | L122 |
-| Community Visualization UI コンポーネント（CONV-08-05） | L161 |
-| 続き | L270 |
+| Skill Runtime API Key Panel（TASK-RT-04） | L67 |
+| LLM Adapter Error Banner（TASK-RT-01） | L123 |
+| Community Visualization UI コンポーネント（CONV-08-05） | L162 |
+| 続き | L271 |
 
 ### references/ui-ux-feature-components-details.md
 
@@ -1680,36 +1499,6 @@ node scripts/list-specs.js --topics
 | 依存関係セキュリティ | L55 |
 | 関連ドキュメント | L80 |
 
-### references/security-electron-ipc-advanced.md
-
-| セクション | 行 |
-|------------|----|
-| 実装例: skillDebugAPI（TASK-9H） | L6 |
-| 実装例: skillDocsAPI（TASK-9I） | L61 |
-| 実装例: skillAnalyticsAPI（TASK-9J） | L128 |
-| 実装例: `skill:execute` 認証 preflight ガード（TASK-FIX-SKILL-AUTH-PREFLIGHT-GUARD-001） | L161 |
-| 自動更新のセキュリティ | L192 |
-| safeInvoke / invokeWithTimeout チャンネル別 timeout + cleanup 契約（TASK-FIX-IPC-TIMEOUT-001） | L203 |
-
-### references/security-electron-ipc-core.md
-
-| セクション | 行 |
-|------------|----|
-| セキュリティ設定 | L6 |
-| Content Security Policy (CSP) | L20 |
-| IPC通信のセキュリティ | L37 |
-| 続き | L346 |
-
-### references/security-electron-ipc-details.md
-
-| セクション | 行 |
-|------------|----|
-| 実装例: skillCreatorAPI | L6 |
-| 実装例: skillFileAPI（TASK-9A-B） | L188 |
-| 実装例: skillShareAPI（TASK-9F） | L262 |
-| 実装例: skillChainAPI（TASK-9D） | L341 |
-| 実装例: skillScheduleAPI（TASK-9G） | L381 |
-
 ### references/security-electron-ipc-examples.md
 
 | セクション | 行 |
@@ -1720,24 +1509,6 @@ node scripts/list-specs.js --topics
 | IPC Layer Integrity Fix（TASK-IMP-IPC-LAYER-INTEGRITY-FIX-001、2026-03-19完了） | L138 |
 | ApprovalGate セキュリティ契約（TASK-IMP-ADVANCED-CONSOLE-SAFETY-GOVERNANCE-001） | L153 |
 | Skill Creator External API Credential 秘匿化（TASK-SDK-SC-03） | L208 |
-
-### references/security-electron-ipc-history.md
-
-| セクション | 行 |
-|------------|----|
-| 変更履歴 | L6 |
-| 関連ドキュメント | L53 |
-| 完了タスク | L62 |
-
-### references/security-electron-ipc.md
-
-| セクション | 行 |
-|------------|----|
-| 概要 | L3 |
-| 仕様書インデックス | L6 |
-| 利用順序 | L14 |
-| 関連ドキュメント | L19 |
-| IPC契約ドリフト防止（UT-TASK06-007） | L23 |
 
 ### references/security-implementation.md
 
@@ -1852,40 +1623,21 @@ node scripts/list-specs.js --topics
 | セクション | 行 |
 |------------|----|
 | 概要 | L6 |
-| バックエンド・データベース | L45 |
-| AI統合 | L198 |
-| 開発ツール | L404 |
-| 完了タスク | L445 |
-| 関連ドキュメント | L477 |
-| 変更履歴 | L487 |
+| バックエンド・データベース | L46 |
+| AI統合 | L199 |
+| 開発ツール | L405 |
+| 完了タスク | L446 |
+| 関連ドキュメント | L478 |
+| 変更履歴 | L488 |
 
 ### references/technology-core.md
 
 | セクション | 行 |
 |------------|----|
 | 概要 | L6 |
-| コアランタイム | L54 |
-| フロントエンド | L115 |
-| 変更履歴 | L242 |
-
-### references/technology-desktop.md
-
-| セクション | 行 |
-|------------|----|
-| 概要 | L8 |
-| Electron | L14 |
-| ビルド・パッケージング | L44 |
-| Main Process技術 | L72 |
-| Renderer Process技術 | L118 |
-| IPC通信 | L144 |
-| macOS固有 | L165 |
-| セキュリティ | L189 |
-| 自動更新 | L214 |
-| 開発ツール | L234 |
-| ディレクトリ構造 | L254 |
-| 関連ドキュメント | L274 |
-| 関連未タスク | L286 |
-| 変更履歴 | L294 |
+| コアランタイム | L55 |
+| フロントエンド | L116 |
+| 変更履歴 | L243 |
 
 ### references/technology-devops-core.md
 
@@ -2369,7 +2121,7 @@ node scripts/list-specs.js --topics
 
 ## その他
 
-**関連キーワード**: デプロイ, Railway, 環境変数, Discord, プラグイン
+**関連キーワード**: デプロイ, Cloudflare, 環境変数, Discord, プラグイン
 
 ### references/arch-claude-cli.md
 
@@ -2379,64 +2131,6 @@ node scripts/list-specs.js --topics
 | Claude Code CLI連携（Desktop Main Process） | L19 |
 | Claude CLI Renderer API（Preload API） | L124 |
 | 関連ドキュメント | L317 |
-
-### references/arch-electron-services-advanced.md
-
-| セクション | 行 |
-|------------|----|
-| スキル管理サービス | L6 |
-
-### references/arch-electron-services-core.md
-
-| セクション | 行 |
-|------------|----|
-| Environment Backend サービス | L6 |
-| スキル公開・配布サービス境界（TASK-SKILL-LIFECYCLE-08 / spec_created） | L73 |
-
-### references/arch-electron-services-details-part1.md
-
-| セクション | 行 |
-|------------|----|
-| スキル管理サービス | L8 |
-
-### references/arch-electron-services-details-part2.md
-
-| セクション | 行 |
-|------------|----|
-| SkillForker（TASK-9E） | L8 |
-| RuntimeResolver（runtime routing 共通化 — UT-IMP-SKILL-AGENT-RUNTIME-ROUTING-INTEGRATION-CLOSURE-001） | L27 |
-| RuntimePolicyResolver（TASK-SC-02-RUNTIME-POLICY-CLOSURE） | L100 |
-| Slide RuntimeResolver 採用計画（TASK-IMP-SLIDE-AI-RUNTIME-ALIGNMENT-001） | L217 |
-| SkillScheduler / ScheduleStore（TASK-9G） | L276 |
-| DefaultSafetyGate サービス（UT-06-003） | L305 |
-| SkillService と SkillExecutor の統合（TASK-FIX-7-1） | L356 |
-| Runtime routing / handoff DI 統合（UT-IMP-SKILL-AGENT-RUNTIME-ROUTING-INTEGRATION-CLOSURE-001） | L381 |
-| キャッシュ機構 | L409 |
-| 永続化 | L415 |
-| SkillImportManager 永続化実装詳細（TASK-FIX-4-2） | L421 |
-
-### references/arch-electron-services-details.md
-
-| セクション | 行 |
-|------------|----|
-| 分割先ファイル | L8 |
-| 目次（クイックリファレンス） | L15 |
-
-### references/arch-electron-services-history.md
-
-| セクション | 行 |
-|------------|----|
-| 変更履歴 | L6 |
-| 関連ドキュメント | L23 |
-
-### references/arch-electron-services.md
-
-| セクション | 行 |
-|------------|----|
-| 概要 | L3 |
-| 仕様書インデックス | L6 |
-| 利用順序 | L14 |
-| 関連ドキュメント | L19 |
 
 ### references/arch-execution-capability-contract.md
 
@@ -2454,14 +2148,20 @@ node scripts/list-specs.js --topics
 | この構造の利点 | L67 |
 | 関連ドキュメント | L79 |
 
-### references/arch-ipc-persistence.md
+### references/arch-integration-packages.md
 
 | セクション | 行 |
 |------------|----|
-| 変更履歴 | L8 |
-| IPC Handler Registration Pattern（Desktop Main Process） | L18 |
-| 会話履歴永続化パターン（Desktop Main Process） | L96 |
-| 関連ドキュメント | L235 |
+| 概要 | L12 |
+| ディレクトリ構造 | L23 |
+| ツールパッケージ仕様 | L50 |
+| ワークフローパッケージ仕様 | L120 |
+| パターン例: 外部サービス連携ワークフロー（参考） | L179 |
+| ツールパッケージ一覧（計画） | L227 |
+| 依存関係ルール | L241 |
+| 新規ツールパッケージ追加手順 | L258 |
+| 新規ワークフローパッケージ追加手順 | L269 |
+| 変更履歴 | L280 |
 
 ### references/arch-state-management-advanced.md
 
@@ -2539,21 +2239,13 @@ node scripts/list-specs.js --topics
 
 | セクション | 行 |
 |------------|----|
-| LLMConfigProvider 状態管理変更（TASK-IMP-MAIN-CHAT-SETTINGS-AI-RUNTIME-001） | L4 |
-| ChatPanel Real AI Chat 配線 状態管理拡張（TASK-IMP-CHATPANEL-REAL-AI-CHAT-001 / spec_created） | L43 |
-| 公開・配布状態管理設計（TASK-SKILL-LIFECYCLE-08 / spec_created） | L144 |
-| SkillExecutionStatus 拡張状態の配置ルール（UT-LIFECYCLE-EXECUTION-STATUS-TYPE-SPEC-SYNC-001） | L169 |
-| Slide Modifier / Manual Fallback 状態管理設計（TASK-IMP-SLIDE-MODIFIER-MANUAL-FALLBACK-ALIGNMENT-001 / spec_created） | L196 |
-| LLM Generation State 配置ルール（TASK-SC-06-UI-RUNTIME-CONNECTION / TASK-SC-07 current facts） | L271 |
-| TASK-SC-07 SkillCreateWizard current facts | L358 |
-| Workflow Snapshot State 配置ルール（TASK-SDK-04） | L380 |
 | LLMConfigProvider 状態管理変更（TASK-IMP-MAIN-CHAT-SETTINGS-AI-RUNTIME-001） | L5 |
 | ChatPanel Real AI Chat 配線 状態管理拡張（TASK-IMP-CHATPANEL-REAL-AI-CHAT-001 / spec_created） | L46 |
 | 公開・配布状態管理設計（TASK-SKILL-LIFECYCLE-08 / spec_created） | L149 |
 | SkillExecutionStatus 拡張状態の配置ルール（UT-LIFECYCLE-EXECUTION-STATUS-TYPE-SPEC-SYNC-001） | L175 |
 | Slide Modifier / Manual Fallback 状態管理設計（TASK-IMP-SLIDE-MODIFIER-MANUAL-FALLBACK-ALIGNMENT-001 / spec_created） | L202 |
-| LLM Generation State 配置ルール（TASK-SC-06-UI-RUNTIME-CONNECTION） | L277 |
-| Workflow Snapshot State 配置ルール（TASK-SDK-04） | L469 |
+| LLM Generation State 配置ルール（TASK-SC-06-UI-RUNTIME-CONNECTION / TASK-SC-07 current facts） | L277 |
+| Workflow Snapshot State 配置ルール（TASK-SDK-04） | L523 |
 
 ### references/arch-state-management.md
 
@@ -2581,8 +2273,8 @@ node scripts/list-specs.js --topics
 | セクション | 行 |
 |------------|----|
 | Monaco Diff Editor統合パターン | L6 |
-| SkillCreateWizard LLM / template 併用パターン（TASK-SC-07 current facts） | L204 |
-| SkillCreateWizard LLM 連携フロー（TASK-SC-07） | L210 |
+| SkillCreateWizard LLM / template 併用パターン（TASK-SC-07 current facts） | L210 |
+| SkillCreateWizard LLM 連携フロー（TASK-SC-07） | L269 |
 
 ### references/arch-ui-components-details.md
 
@@ -2624,15 +2316,44 @@ node scripts/list-specs.js --topics
 | 関連ドキュメント | L221 |
 | 変更履歴 | L229 |
 
+### references/deployment-branch-strategy.md
+
+| セクション | 行 |
+|------------|----|
+| ブランチ戦略 | L8 |
+| フロー | L25 |
+| 環境マッピング | L38 |
+| CI/CD トリガー対応表 | L48 |
+| GitHub 環境保護ルール（推奨設定） | L60 |
+| ブランチ保護ルール（推奨設定） | L83 |
+| 変更履歴 | L108 |
+
+### references/deployment-cloudflare.md
+
+| セクション | 行 |
+|------------|----|
+| 概要 | L6 |
+| サービス構成 | L13 |
+| Cloudflare Pages デプロイ | L26 |
+| Cloudflare Workers デプロイ（APIバックエンド） | L92 |
+| Cloudflare D1 データベース | L138 |
+| GitHub Actions CI/CD | L165 |
+| プレビューデプロイメント | L197 |
+| カスタムドメイン設定 | L214 |
+| 環境分離 | L227 |
+| ロールバック戦略 | L247 |
+| コスト概算（個人開発） | L268 |
+| 変更履歴 | L280 |
+
 ### references/deployment-core.md
 
 | セクション | 行 |
 |------------|----|
 | デプロイメント戦略概要 | L6 |
-| Railway デプロイ戦略 | L36 |
-| GitHub Actions CI/CD パイプライン | L137 |
-| Electron アプリのリリース | L240 |
-| ロールバック戦略 | L320 |
+| Cloudflare デプロイ戦略 | L37 |
+| GitHub Actions CI/CD パイプライン | L84 |
+| ロールバック戦略 | L122 |
+| 変更履歴 | L168 |
 
 ### references/deployment-details.md
 
@@ -2642,34 +2363,20 @@ node scripts/list-specs.js --topics
 | デプロイチェックリスト | L69 |
 | GitHub Secrets の要件 | L122 |
 
-### references/deployment-electron.md
-
-| セクション | 行 |
-|------------|----|
-| ビルドターゲット | L10 |
-| Native Addon 再構築（postinstall bootstrap） | L34 |
-| リリースフロー | L74 |
-| リリースチェックリスト | L86 |
-| 自動更新（electron-updater） | L99 |
-| コードサイニング | L126 |
-| デプロイチェックリスト | L150 |
-| データベースマイグレーションのロールバック | L203 |
-| 関連ドキュメント | L229 |
-
 ### references/deployment-gha.md
 
 | セクション | 行 |
 |------------|----|
 | 概要 | L10 |
 | ワークフロー構成 | L38 |
-| CI ワークフロー要件（PR時） | L48 |
-| キャッシュ戦略 | L99 |
-| 並列実行の活用 | L129 |
-| CD ワークフロー要件（mainマージ時） | L216 |
-| モニタリングとアラート | L240 |
-| GitHub Secrets の要件 | L287 |
-| 関連ドキュメント | L305 |
-| 変更履歴 | L313 |
+| CI ワークフロー要件（PR 時） | L47 |
+| キャッシュ戦略 | L81 |
+| 並列実行の活用 | L104 |
+| CD ワークフロー要件（main マージ時） | L160 |
+| モニタリングとアラート | L183 |
+| GitHub Secrets の要件 | L217 |
+| 関連ドキュメント | L241 |
+| 変更履歴 | L248 |
 
 ### references/deployment-history.md
 
@@ -2677,16 +2384,19 @@ node scripts/list-specs.js --topics
 |------------|----|
 | 関連ドキュメント | L6 |
 
-### references/deployment-railway.md
+### references/deployment-secrets-management.md
 
 | セクション | 行 |
 |------------|----|
-| 無料枠の制限と最適化 | L10 |
-| スリープモード対策 | L43 |
-| カスタムドメイン設定 | L73 |
-| 環境分離 | L90 |
-| ロールバック | L115 |
-| 関連ドキュメント | L140 |
+| 概要 | L8 |
+| 管理場所の判断フロー | L20 |
+| Cloudflare Secrets（ランタイム） | L37 |
+| GitHub Secrets（CI/CD 用） | L78 |
+| wrangler.toml の環境別設定 | L103 |
+| ローカル開発での設定 | L135 |
+| セキュリティ原則 | L174 |
+| Cloudflare API Token の作成手順 | L185 |
+| 変更履歴 | L200 |
 
 ### references/deployment.md
 
@@ -2694,8 +2404,8 @@ node scripts/list-specs.js --topics
 |------------|----|
 | 概要 | L3 |
 | 仕様書インデックス | L6 |
-| 利用順序 | L13 |
-| 関連ドキュメント | L18 |
+| 利用順序 | L16 |
+| 関連ドキュメント | L21 |
 
 ### references/development-guidelines-core.md
 
@@ -2797,12 +2507,12 @@ node scripts/list-specs.js --topics
 | 変更履歴 | L6 |
 | 環境変数の分類 | L15 |
 | セキュリティベストプラクティス | L67 |
-| 環境別設定 | L139 |
-| Electron アプリでの環境変数 | L191 |
-| トラブルシューティング | L248 |
-| チーム開発での運用 | L309 |
-| 必須環境変数一覧 | L347 |
-| 関連ドキュメント | L405 |
+| 環境別設定 | L141 |
+| Electron アプリでの環境変数 | L195 |
+| トラブルシューティング | L252 |
+| チーム開発での運用 | L313 |
+| 必須環境変数一覧 | L352 |
+| 関連ドキュメント | L410 |
 
 ### references/error-handling-core.md
 
@@ -5028,3 +4738,4 @@ node scripts/list-specs.js --topics
 | SkillLifecyclePanel 責務別props分離パターン | L82 |
 
 ---
+

@@ -693,9 +693,7 @@ packages/
 | インターフェース/型定義   | interfaces-template.md     |
 | アーキテクチャ/パターン   | architecture-template.md   |
 | API/エンドポイント        | api-template.md            |
-| Electron IPC              | ipc-channel-template.md    |
 | React Hook                | react-hook-template.md     |
-| サービス/ビジネスロジック | service-template.md        |
 | UIコンポーネント          | ui-ux-template.md          |
 | テスト仕様                | testing-template.md        |
 | エラーハンドリング        | error-handling-template.md |
@@ -733,3 +731,16 @@ packages/
 | canUseTool path-scoped 判定 | `references/arch-state-management-core.md` → governance セクション |
 | extractTargetPath / allowedSkillRoot | `references/api-ipc-system-core.md` |
 | SafetyGovernance Production Integration | `references/arch-state-management-core.md` |
+
+---
+
+### Cloudflare デプロイ・本番運用
+
+| 目的 | 参照先 |
+| --- | --- |
+| デプロイ戦略・全体像 | `references/deployment-core.md` |
+| Cloudflare セットアップ手順 | `references/deployment-cloudflare.md` |
+| モニタリング・チェックリスト | `references/deployment-details.md` |
+| ブランチ戦略（feature→dev→main） | `references/deployment-branch-strategy.md` |
+| シークレット管理（CF/GitHub） | `references/deployment-secrets-management.md` |
+| インテグレーションパッケージ設計 | `references/arch-integration-packages.md` |

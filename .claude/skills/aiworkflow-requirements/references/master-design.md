@@ -49,8 +49,8 @@
 
 | セクション         | ドキュメント                                                 | 概要                                                       |
 | ------------------ | ------------------------------------------------------------ | ---------------------------------------------------------- |
-| 12. デプロイメント | [12-deployment.md](./12-deployment.md)                       | Railway自動デプロイ、GitHub Actions、品質ゲート            |
-| 13. 環境変数       | [13-environment-variables.md](./13-environment-variables.md) | Cloud環境変数、Local Agent環境変数、Turso設定、Railway CLI |
+| 12. デプロイメント | [12-deployment.md](./12-deployment.md)                       | Cloudflare自動デプロイ、GitHub Actions、品質ゲート         |
+| 13. 環境変数       | [13-environment-variables.md](./13-environment-variables.md) | Cloudflare環境変数、Local Agent環境変数、Turso設定          |
 
 ### データベース
 
@@ -103,7 +103,7 @@
 | AI             | Vercel AI SDK (OpenAI, Anthropic, Google, xAI)      |
 | UI             | React 19.x, Tailwind CSS, shadcn/ui                 |
 | テスト         | Vitest, Playwright, React Testing Library           |
-| デプロイ       | Railway, GitHub Actions                             |
+| デプロイ       | Cloudflare, GitHub Actions                           |
 
 ### アーキテクチャ原則
 
@@ -226,6 +226,6 @@ Electronデスクトップアプリでは、ユーザーがLLMプロバイダー
 | リソース     | 説明                   |
 | ------------ | ---------------------- |
 | リポジトリ   | GitHub（プライベート） |
-| デプロイ環境 | Railway                |
+| デプロイ環境 | Cloudflare             |
 | データベース | Turso                  |
 | CI/CD        | GitHub Actions         |

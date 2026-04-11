@@ -2,7 +2,7 @@
 # Claude Code 自動フォーマットHook
 # イベント: PostToolUse (Edit|Write)
 # 目的: ファイル編集後に自動でPrettierを実行
-# 対象: TypeScript, Next.js, Electron プロジェクト
+# 対象: TypeScript, Next.js, Cloudflare Workers プロジェクト
 #
 # 環境変数:
 #   CLAUDE_SKIP_FORMAT=1       - このフックをスキップ

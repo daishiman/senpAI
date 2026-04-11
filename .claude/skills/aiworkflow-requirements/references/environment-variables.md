@@ -87,8 +87,8 @@
 
 | 環境              | 保存場所                           |
 | ----------------- | ---------------------------------- |
-| ローカル開発      | `.env.local`（Gitignore必須）      |
-| ステージング/本番 | Railway Variables / GitHub Secrets |
+| ローカル開発      | `1Password Environments`（必要なら local `.env file` destination を mount） |
+| ステージング/本番 | Cloudflare Variables / Cloudflare Secrets / GitHub Secrets |
 
 #### 禁止事項
 
@@ -96,6 +96,8 @@
 - 認証情報をソースコード内にハードコードしない
 - 公開リポジトリで機密情報を共有しない
 - ログやエラーメッセージに機密情報を出力しない
+- ワークツリー内の平文 `.env` を秘密の正本にしない
+- `Secure Note` を環境変数の正本として使わない
 
 ### ローテーション戦略
 
@@ -108,7 +110,7 @@
 #### ローテーション手順
 
 1. サービスプロバイダーで新しいキーを発行する
-2. 環境変数を新しい値に更新する（Railway、GitHub Secrets）
+2. 環境変数を新しい値に更新する（Cloudflare、GitHub Secrets）
 3. ステージング環境で動作確認する
 4. ヘルスチェックで正常性を確認する
 5. 旧認証情報を無効化する（確認後24時間以内）
@@ -172,19 +174,21 @@
 - コメントで取得方法を記載する
 - 必須/任意を明記する
 
-### Railway CLI による環境変数同期
+### Cloudflare CLI / wrangler による環境変数同期
 
-| コマンド                | 説明                                            |
-| ----------------------- | ----------------------------------------------- |
-| `railway variables`     | Railwayの環境変数一覧を表示                     |
-| `railway run <command>` | Railwayの環境変数をロードした状態でコマンド実行 |
+| コマンド | 説明 |
+| -------- | ---- |
+| `wrangler secret list --env <env>` | Workers のシークレット一覧を表示 |
+| `wrangler secret put <name> --env <env>` | Workers のシークレットを登録 |
+| `wrangler pages secret list --project-name <project>` | Pages のシークレット一覧を表示 |
+| `wrangler pages secret put <name> --project-name <project>` | Pages のシークレットを登録 |
 
 #### ローカル開発フロー
 
-1. Railway CLIで環境変数を同期
-2. `railway run pnpm dev`でローカルサーバー起動
-3. `http://localhost:3000`で動作確認
-4. Railwayの環境変数が自動的にロードされる（.envファイル不要）
+1. Cloudflare Dashboard か `wrangler` で環境変数を登録
+2. `wrangler dev` または `wrangler pages dev` でローカルサーバー起動
+3. `http://localhost:3000` で動作確認
+4. Cloudflare の環境変数が自動的に適用される（`.env` ファイル不要）
 
 ---
 
@@ -275,7 +279,7 @@
 | クライアントで読めない | `NEXT_PUBLIC_*`でない | プレフィックスを追加                 |
 | 値が`undefined`        | 変数名のタイポ        | スペルチェック                       |
 | 古い値が使われる       | キャッシュ            | サーバー再起動、ビルドキャッシュ削除 |
-| Railwayで読めない      | 変数未設定            | ダッシュボードで設定                 |
+| Cloudflareで読めない   | 変数未設定            | ダッシュボードで設定                 |
 
 ### 型エラーへの対処
 
@@ -319,8 +323,9 @@
 
 #### セットアップチェックリスト
 
-- [ ] `.env.example`を`.env.local`にコピー
-- [ ] 必須変数を設定
+- [ ] 1Password Developer を有効にする
+- [ ] Environment を作成する
+- [ ] 必要なら local `.env file` destination を設定する
 - [ ] `pnpm dev`で起動確認
 - [ ] ヘルスチェック成功
 
@@ -346,25 +351,25 @@
 
 ## 必須環境変数一覧
 
-### Cloud環境（Railway + Turso）
+### Cloud環境（Cloudflare + Turso）
 
 | 変数名               | 説明                | 設定方法          | 必須 |
 | -------------------- | ------------------- | ----------------- | ---- |
-| `TURSO_DATABASE_URL` | Turso接続URL        | Railway Variables | Yes  |
-| `TURSO_AUTH_TOKEN`   | Turso認証トークン   | Railway Secrets   | Yes  |
-| `OPENAI_API_KEY`     | OpenAI APIキー      | Railway Secrets   | No   |
-| `ANTHROPIC_API_KEY`  | Anthropic APIキー   | Railway Secrets   | No   |
-| `GOOGLE_AI_API_KEY`  | Google AI APIキー   | Railway Secrets   | No   |
-| `XAI_API_KEY`        | xAI APIキー         | Railway Secrets   | No   |
-| `DISCORD_TOKEN`      | Discord Botトークン | Railway Secrets   | No   |
-| `DISCORD_CLIENT_ID`  | Discord Client ID   | Railway Variables | No   |
-| `AGENT_SECRET_KEY`   | Agent認証キー       | Railway Secrets   | Yes  |
+| `TURSO_DATABASE_URL` | Turso接続URL        | Cloudflare Secrets | Yes  |
+| `TURSO_AUTH_TOKEN`   | Turso認証トークン   | Cloudflare Secrets | Yes  |
+| `OPENAI_API_KEY`     | OpenAI APIキー      | Cloudflare Secrets | No   |
+| `ANTHROPIC_API_KEY`  | Anthropic APIキー   | Cloudflare Secrets | No   |
+| `GOOGLE_AI_API_KEY`  | Google AI APIキー   | Cloudflare Secrets | No   |
+| `XAI_API_KEY`        | xAI APIキー         | Cloudflare Secrets | No   |
+| `DISCORD_TOKEN`      | Discord Botトークン | Cloudflare Secrets | No   |
+| `DISCORD_CLIENT_ID`  | Discord Client ID   | Cloudflare Variables | No   |
+| `AGENT_SECRET_KEY`   | Agent認証キー       | Cloudflare Secrets | Yes  |
 
 ### Local Agent
 
 | 変数名             | 説明                                  | 必須 |
 | ------------------ | ------------------------------------- | ---- |
-| `API_BASE_URL`     | Railwayデプロイ先のURL                | Yes  |
+| `API_BASE_URL`     | Cloudflareデプロイ先のURL            | Yes  |
 | `AGENT_SECRET_KEY` | Cloudと同じ値                         | Yes  |
 | `WATCH_DIR`        | 監視ディレクトリ（例: `./InputBox`）  | Yes  |
 | `OUTPUT_DIR`       | 出力ディレクトリ（例: `./OutputBox`） | Yes  |

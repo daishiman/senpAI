@@ -58,7 +58,7 @@
 | ローカル開発（ファイル） | `file:./data/local.db` | 不要 | 高速な開発サイクル |
 | ローカル開発（Turso接続） | `libsql://db-name.turso.io` | AUTH_TOKEN必要 | 本番相当の動作確認 |
 | デスクトップアプリ | `file:${appDataPath}/app.db` | 不要 | オフライン動作 |
-| バックエンドAPI（Railway） | `libsql://db-name.turso.io` | AUTH_TOKEN必要 | 本番環境 |
+| バックエンドAPI（Cloudflare Workers） | `libsql://db-name.turso.io` | AUTH_TOKEN必要 | 本番環境 |
 
 ### 環境変数
 

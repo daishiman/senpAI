@@ -2,7 +2,7 @@
 # Claude Code テスト自動実行Hook
 # イベント: PostToolUse (Edit|Write)
 # 目的: ソースファイル編集後に関連テストを自動実行
-# 対象: TypeScript, Next.js, Electron プロジェクト (Vitest/Jest)
+# 対象: TypeScript, Next.js, Cloudflare Workers プロジェクト (Vitest/Jest)
 #
 # 環境変数:
 #   CLAUDE_SKIP_HEAVY_HOOKS=1  - このフックをスキップ
